@@ -352,6 +352,7 @@ int main(){
         two_exchange(1, cur_a, temp_a);
         last_a = cur_a;
         if((int) temp_a.size() > 0) cur_a = temp_a[0];
+        //it breaks when candidate's worse than current state
         if(perimeter(cur_a) > perimeter(last_a)){
             break;
         }
@@ -372,6 +373,7 @@ int main(){
         two_exchange(2, cur_b, temp_b);
         last_b = cur_b;
         if((int) temp_b.size() > 0) cur_b = temp_b[0];
+        //it breaks when candidate's worse than current state
         if(perimeter(cur_b) > perimeter(last_b)){
             break;
         }
@@ -393,6 +395,7 @@ int main(){
         two_exchange(3, cur_c, temp_c);
         last_c = cur_c;
         if((int) temp_c.size() > 0) cur_c = temp_c[0];
+        //it breaks when candidate's worse than current state
         if(perimeter(cur_c) > perimeter(last_c)){
             break;
         }
@@ -416,6 +419,7 @@ int main(){
         two_exchange(4, cur_d, temp_d);
         last_d = cur_d;
         if((int) temp_d.size() > 0) cur_d = temp_d[(rand() % (((int)temp_d.size()-1) - 0 + 1)) + 0];
+        //it breaks when candidate's worse than current state
         if(perimeter(cur_d) > perimeter(last_d)){
             break;
         }

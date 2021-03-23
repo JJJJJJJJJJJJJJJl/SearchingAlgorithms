@@ -14,7 +14,7 @@ g++ -Wall main.cpp -o main
 **Input**<br/>
 
 First line asks for a number N of points.<br/>
-Second line asks for a flag number, 1 so it reads N points from stdin or 2 so randomly it generates N points.<br/>
+Second line asks for a flag number, 1 so it reads N points from stdin or 2 so it randomly generates N points.<br/>
 In case of flag being 1, a point must be written as "x y".<br/>
 In case of flag being 2, a number M is then asked meaning coordinate values will be constrained to [-M..M].<br/>
 <br/>**Input Test Example**<br/>
