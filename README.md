@@ -13,6 +13,7 @@ Input:<br/>
 First line asks for a number N of points.<br/>
 Second line asks for a flag number, 1 so it reads N points from stdin or 2 so randomly it generates N points.<br/>
 In case of flag being 1, a point be read as "x y".<br/>
+It then prints out each algorithm/heuristic solution.<br/>
 <br/>Input test example:<br/>
 ```
 5
@@ -43,5 +44,3 @@ Less Edge Intersections: [(8,-7);(1,9)] [(1,9);(-4,-7)] [(9,-9);(-4,-7)] [(9,-9)
 
 Random Neighbour: [(8,-7);(7,7)] [(1,9);(7,7)] [(9,-9);(-4,-7)] [(-4,-7);(1,9)] [(9,-9);(8,-7)]
 ```
-<br/>
-It then prints out each algorithm/heuristic solution.<br/>
