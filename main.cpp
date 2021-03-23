@@ -258,7 +258,6 @@ int main(){
     cin >> n;
     //cout << "Read from STDIN(1), Generate randomly(2): ";
     cin >> flag;
-    cout << endl;
     
     //vector/set containg all random generated points
     vector<pair<int,int>> vector_points;
@@ -347,44 +346,62 @@ int main(){
     vector<vector<pair<pair<int,int>,pair<int,int>>>> temp_a;
     two_exchange(1, vector_edges, temp_a);
     vector<pair<pair<int,int>,pair<int,int>>> cur_a = temp_a[0];
+    vector<pair<pair<int,int>,pair<int,int>>> last_a;
     while(!polygon(cur_a) && (int) temp_a.size() > 0){
         temp_a.clear();
         two_exchange(1, cur_a, temp_a);
+        last_a = cur_a;
         if((int) temp_a.size() > 0) cur_a = temp_a[0];
+        if(perimeter(cur_a) > perimeter(last_a)){
+            break;
+        }
     }
     cout << "Best-Improvement First: ";
     show_vector_edges(cur_a);
     cout << endl;
     cur_a.clear();
+    last_a.clear();
     temp_a.clear();
 
     //4b - "First-Improvement" @@@@@@@@@@@@@
     vector<vector<pair<pair<int,int>,pair<int,int>>>> temp_b = two_exchange_neighbours;
     vector<pair<pair<int,int>,pair<int,int>>> cur_b = temp_b[0];
+    vector<pair<pair<int,int>,pair<int,int>>> last_b;
     while(!polygon(cur_b) && (int) temp_b.size() > 0){
         temp_b.clear();
         two_exchange(2, cur_b, temp_b);
+        last_b = cur_b;
         if((int) temp_b.size() > 0) cur_b = temp_b[0];
+        if(perimeter(cur_b) > perimeter(last_b)){
+            break;
+        }
     }
     cout << "First-Improvement: ";
     show_vector_edges(cur_b);
     cout << endl;
     cur_b.clear();
+    last_b.clear();
     temp_b.clear();
 
     //4c - "Less Edge Intersections" @@@@@@@@@@@@@
     vector<vector<pair<pair<int,int>,pair<int,int>>>> temp_c;
     two_exchange(3, vector_edges, temp_c);
     vector<pair<pair<int,int>,pair<int,int>>> cur_c = temp_c[0];
+    vector<pair<pair<int,int>,pair<int,int>>> last_c;
     while(!polygon(cur_c) && (int) temp_c.size() > 0){
         temp_c.clear();
         two_exchange(3, cur_c, temp_c);
+        last_c = cur_c;
         if((int) temp_c.size() > 0) cur_c = temp_c[0];
+        if(perimeter(cur_c) > perimeter(last_c)){
+            break;
+        }
     }
     cout << "Less Edge Intersections: ";
     show_vector_edges(cur_c);
     cout << endl;
     cur_c.clear();
+    last_c.clear();
     temp_c.clear();
 
     //4d - Random Neighbour @@@@@@@@@@@@@
@@ -393,14 +410,20 @@ int main(){
     //not sure if should have some sort of breakpoint in case of infinite loops
     srand(time(0));
     vector<pair<pair<int,int>,pair<int,int>>> cur_d = temp_d[(rand() % (((int)temp_d.size()-1) - 0 + 1)) + 0];
+    vector<pair<pair<int,int>,pair<int,int>>> last_d;
     while(!polygon(cur_d) && (int) temp_d.size() > 0){
         temp_d.clear();
         two_exchange(4, cur_d, temp_d);
+        last_d = cur_d;
         if((int) temp_d.size() > 0) cur_d = temp_d[(rand() % (((int)temp_d.size()-1) - 0 + 1)) + 0];
+        if(perimeter(cur_d) > perimeter(last_d)){
+            break;
+        }
     }
     cout << "Random Neighbour: ";
     show_vector_edges(cur_d);
     cur_d.clear();
+    last_d.clear();
     temp_d.clear();
 
     return 0;
