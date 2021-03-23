@@ -152,7 +152,7 @@ int polygon(vector<pair<pair<int,int>,pair<int,int>>> edges){
 //flag == 0 -> Generates all legit neighbours.
 //flag == 1 -> Generates all legit neighbours but only returns the one with lowest perimeter ("best-improvement first")
 //flag == 2 -> Generates first legit neighbour it finds and stops. ("first-improvement")
-//flag == 3 -> Genereates all legit neighbours but only returns the one with less edge insertections.
+//flag == 3 -> Genereates all legit neighbours but only returns the one with less edge intersections.
 //flag == 4 -> Generates all legit neighbours since we choosing one randomly.
 void two_exchange(int flag, vector<pair<pair<int,int>,pair<int,int>>> vector_edges, vector<vector<pair<pair<int,int>,pair<int,int>>>> &neighbourhood){
     int lowest_perimeter = INT_MAX;//flag == 1 purposes, assuming perimeters wont go beyond INT_MAX (2147483647)
