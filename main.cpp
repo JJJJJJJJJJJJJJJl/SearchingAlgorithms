@@ -254,9 +254,9 @@ int main(){
     //input 
 
     int flag, n;
-    cout << "Number of points: ";
+    //cout << "Number of points: ";
     cin >> n;
-    cout << "Read from STDIN(1), Generate randomly(2): ";
+    //cout << "Read from STDIN(1), Generate randomly(2): ";
     cin >> flag;
     cout << endl;
     
@@ -267,7 +267,7 @@ int main(){
     if(flag == 1){
         while((int) vector_points.size() != n){
             int x, y; 
-            cout << "PointCoordinates@ex('x y'): ";
+            //cout << "PointCoordinates@ex('x y'): ";
             cin >> x >> y;
             pair<int,int> p = make_pair(x, y);
             vector_points.push_back(p);
@@ -337,12 +337,12 @@ int main(){
     generate_edges(vector_points, vector_edges);
     vector<vector<pair<pair<int,int>,pair<int,int>>>> two_exchange_neighbours;
     two_exchange(0, vector_edges, two_exchange_neighbours);
-    cout << "2-Exchange Neighbourhood: " << endl;
+    cout << "2-Exchange Neighbourhood:" << endl;
     show_state_neighbourhood(two_exchange_neighbours);
     cout << endl;
 
     //4 - Hill Climbing @@@@@@@@@@@@@
-    cout << "Hill Climbing (based on different heuristics)" << endl;
+    cout << "Hill Climbing (based on different heuristics):" << endl;
     //4a - "Best-Improvement First" @@@@@@@@@@@@@
     vector<vector<pair<pair<int,int>,pair<int,int>>>> temp_a;
     two_exchange(1, vector_edges, temp_a);
