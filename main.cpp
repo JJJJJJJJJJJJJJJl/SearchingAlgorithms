@@ -1,7 +1,7 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-void show_vector_pairs(vector<pair<int,int>> v){
+void show_vector_points(vector<pair<int,int>> v){
     int n = (int) v.size();
     for(int i=0; i<n; i++){
         cout << "(" << v[i].first << "," << v[i].second << ")";
@@ -40,7 +40,7 @@ void show_state_neighbourhood(vector<vector<pair<pair<int,int>,pair<int,int>>>> 
     return;
 }
 
-//here will do euclidean distance as (x1-x2)^2 + (y1-y2)^2 instead of the square root of it.
+//here we do euclidean distance as (x1-x2)^2 + (y1-y2)^2 instead of the square root of it.
 int euclidean_distance(pair<int,int> p1, pair<int,int> p2){
     return ((p1.first - p2.first) * (p1.first - p2.first)) + ((p1.second - p2.second) * (p1.second - p2.second));
 }
@@ -50,7 +50,7 @@ int points_different(pair<int,int> p1, pair<int,int> p2){
     return p1.first != p2.first || p1.second != p2.second;
 }
 
-//checks if p3 is within p1p2 rectangle
+//checks if p3 is within p1p2 bounds
 int in_box(pair<int,int> p1, pair<int,int> p2, pair<int,int> p3){
     return min(p1.first, p2.first) <= p3.first && max(p1.first, p2.first) >= p3.first
         && min(p1.second, p2.second) <= p3.second && max(p1.second, p2.second) >= p3.second; 
@@ -94,6 +94,26 @@ int edges_intersect(pair<int,int> p1, pair<int,int> p2, pair<int,int> p3, pair<i
     return 0;
 }
 
+int perimeter(vector<pair<pair<int,int>,pair<int,int>>> edges){
+    int ans = 0;
+    for(int i=0; i<(int)edges.size(); i++){
+        ans += euclidean_distance(edges[i].first, edges[i].second);
+    }
+    return ans;
+}
+
+int intersections(vector<pair<pair<int,int>,pair<int,int>>> edges){
+    int ans = 0;
+    for(int i=0; i<(int)edges.size(); i++){
+        for(int j=0; j<(int)edges.size(); j++){
+            if(edges_intersect(edges[i].first, edges[i].second, edges[j].first, edges[j].second)){
+                ans++;
+            }
+        }
+    }
+    return ans;
+}
+
 void generate_edges(vector<pair<int,int>> points, vector<pair<pair<int,int>,pair<int,int>>> &vector_edges){
     int n = (int) points.size();
     //generating edges from initial disposition
@@ -105,7 +125,38 @@ void generate_edges(vector<pair<int,int>> points, vector<pair<pair<int,int>,pair
     return;
 }
 
-void two_exchange(vector<pair<pair<int,int>,pair<int,int>>> vector_edges, vector<vector<pair<pair<int,int>,pair<int,int>>>> &neighbourhood){
+int polygon(vector<pair<pair<int,int>,pair<int,int>>> edges){
+    map<pair<int,int>,int> degrees;
+    for(int i=0; i<(int)edges.size(); i++){
+        if(degrees.find(edges[i].first) == degrees.end()){
+            degrees[edges[i].first] = 1;
+        }
+        else degrees[edges[i].first]++;
+
+        if(degrees.find(edges[i].second) == degrees.end()){
+            degrees[edges[i].second] = 1;
+        }
+        else degrees[edges[i].second]++;
+    }
+    for(auto p : degrees){
+        if(p.second != 2){
+            return 0;
+        }
+    }
+    if(intersections(edges) != 0){
+        return 0;
+    }
+    return 1;
+}
+
+//flag == 0 -> Generates all legit neighbours.
+//flag == 1 -> Generates all legit neighbours but only returns the one with lowest perimeter ("best-improvement first")
+//flag == 2 -> Generates first legit neighbour it finds and stops. ("first-improvement")
+//flag == 3 -> Genereates all legit neighbours but only returns the one with less edge insertections.
+//flag == 4 -> Generates all legit neighbours since we choosing one randomly.
+void two_exchange(int flag, vector<pair<pair<int,int>,pair<int,int>>> vector_edges, vector<vector<pair<pair<int,int>,pair<int,int>>>> &neighbourhood){
+    int lowest_perimeter = INT_MAX;//flag == 1 purposes, assuming perimeters wont go beyond INT_MAX (2147483647)
+    int lowest_intersections = INT_MAX;//flag == 3 purposes, also assuming intersections wont go beyond INT_MAX (2147483647)
     int n = (int) vector_edges.size();
     set<pair<pair<pair<int,int>,pair<int,int>>,pair<pair<int,int>,pair<int,int>>>> vi;//visited intersections
     set<pair<pair<int,int>,pair<int,int>>> set_edges;//edges of original disposition (finding purposes)
@@ -130,7 +181,23 @@ void two_exchange(vector<pair<pair<int,int>,pair<int,int>>> vector_edges, vector
                     && set_edges.find(make_pair(vector_edges[i].second, vector_edges[i].first)) == set_edges.end()
                     && set_edges.find(vector_edges[j]) == set_edges.end()
                     && set_edges.find(make_pair(vector_edges[j].second, vector_edges[j].first)) == set_edges.end()){
-                        neighbourhood.push_back(vector_edges);
+                        int cur_perimeter = perimeter(vector_edges);//flag == 1 purposes
+                        int cur_intersections = intersections(vector_edges);//flag == 3 purposes
+                        if(flag == 1){
+                            if(cur_perimeter < lowest_perimeter){
+                                neighbourhood.clear();
+                                neighbourhood.push_back(vector_edges);
+                                lowest_perimeter = cur_perimeter;
+                            }
+                        }
+                        else if(flag == 3){
+                            if(cur_intersections < lowest_intersections){
+                                neighbourhood.clear();
+                                neighbourhood.push_back(vector_edges);
+                                lowest_intersections = cur_intersections;
+                            }
+                        }
+                        else neighbourhood.push_back(vector_edges);
                     }
                     //reseting to original disposition
                     temp = vector_edges[i].second;
@@ -146,12 +213,33 @@ void two_exchange(vector<pair<pair<int,int>,pair<int,int>>> vector_edges, vector
                     && set_edges.find(make_pair(vector_edges[i].second, vector_edges[i].first)) == set_edges.end()
                     && set_edges.find(vector_edges[j]) == set_edges.end()
                     && set_edges.find(make_pair(vector_edges[j].second, vector_edges[j].first)) == set_edges.end()){
-                        neighbourhood.push_back(vector_edges);
+                        int cur_perimeter = perimeter(vector_edges);//flag == 1 purposes
+                        int cur_intersections = intersections(vector_edges);//flag == 3 purposes
+                        if(flag == 1){
+                            if(cur_perimeter < lowest_perimeter){
+                                neighbourhood.clear();
+                                neighbourhood.push_back(vector_edges);
+                                lowest_perimeter = cur_perimeter;
+                            }
+                        }
+                        else if(flag == 3){
+                            if(cur_intersections < lowest_intersections){
+                                neighbourhood.clear();
+                                neighbourhood.push_back(vector_edges);
+                                lowest_intersections = cur_intersections;
+                            }
+                        }
+                        else neighbourhood.push_back(vector_edges);
                     }
                     //reseting to original disposition
                     temp = vector_edges[i].second;
                     vector_edges[i].second = vector_edges[j].second;
                     vector_edges[j].second = temp;
+
+                    //first legit neighbour was found
+                    if(flag == 2 && (int) neighbourhood.size() > 0){
+                        return;
+                    }
 
                     vi.insert(make_pair(vector_edges[i], vector_edges[j]));
                     vi.insert(make_pair(vector_edges[j], vector_edges[i]));
@@ -160,19 +248,6 @@ void two_exchange(vector<pair<pair<int,int>,pair<int,int>>> vector_edges, vector
         }
     }
     return;
-}
-
-int intersections_num(vector<pair<pair<int,int>,pair<int,int>>> v){
-    int n = (int) v.size();
-    int ans = 0;
-    for(int i=0; i<n; i++){
-        for(int j=0; j<n; j++){
-            if(edges_intersect(v[i].first, v[i].second, v[j].first, v[j].second)){
-                ans++;
-            }
-        }    
-    }
-    return ans;
 }
 
 int main(){
@@ -186,17 +261,17 @@ int main(){
     cout << endl;
     
     //vector/set containg all random generated points
-    vector<pair<int,int>> vector_pairs;
-    set<pair<int,int>> set_pairs;
+    vector<pair<int,int>> vector_points;
+    set<pair<int,int>> set_points;
 
     if(flag == 1){
-        while((int) vector_pairs.size() != n){
+        while((int) vector_points.size() != n){
             int x, y; 
             cout << "PointCoordinates@ex('x y'): ";
             cin >> x >> y;
             pair<int,int> p = make_pair(x, y);
-            vector_pairs.push_back(p);
-            set_pairs.insert(p);
+            vector_points.push_back(p);
+            set_points.insert(p);
         }
         cout << endl;
     }
@@ -208,22 +283,23 @@ int main(){
         srand(time(0));
         for(int i=0; i<n; i++){
             pair<int,int> p = make_pair((rand() % (m - (-m) + 1)) + (-m), (rand() % (m - (-m) + 1)) + (-m));
-            while(set_pairs.find(p) != set_pairs.end()){
+            while(set_points.find(p) != set_points.end()){
                 p = make_pair((rand() % (m - (-m) + 1)) + (-m), (rand() % (m - (-m) + 1)) + (-m));
             }
-            vector_pairs.push_back(p);
-            set_pairs.insert(p);
+            vector_points.push_back(p);
+            set_points.insert(p);
         }
         cout << "Points: ";
-        show_vector_pairs(vector_pairs);
+        show_vector_points(vector_points);
         cout << endl;
     }
     
     //2a - generate points permutation (ty STL) @@@@@@@@@@@@@
-    vector<pair<int,int>> permutation = vector_pairs;
+    vector<pair<int,int>> permutation = vector_points;
     next_permutation(permutation.begin(), permutation.end());
     cout << "Permutation Solution: ";
-    show_vector_pairs(permutation);
+    show_vector_points(permutation);
+    permutation.clear();
     cout << endl;
 
     //2b - nearest neighbour first heuristic @@@@@@@@@@@@@
@@ -232,7 +308,7 @@ int main(){
     int visited[n];
     memset(visited, 0, sizeof(visited));
     vector<pair<int,int>> nnf_ans;
-    set<pair<int,int>> help = set_pairs;
+    set<pair<int,int>> help = set_points;
 
     nnf_ans.push_back(* help.begin());
     help.erase(help.begin());
@@ -251,39 +327,81 @@ int main(){
         nnf_ans.push_back(closest_to_cur);
     }
     cout << "Nearest Neighbour Solution: ";
-    show_vector_pairs(nnf_ans);
+    show_vector_points(nnf_ans);
+    nnf_ans.clear();
+    help.clear();
     cout << endl;
 
     //3 - "2-exchange" @@@@@@@@@@@@@
     vector<pair<pair<int,int>,pair<int,int>>> vector_edges;
-    generate_edges(vector_pairs, vector_edges);
+    generate_edges(vector_points, vector_edges);
     vector<vector<pair<pair<int,int>,pair<int,int>>>> two_exchange_neighbours;
-    two_exchange(vector_edges, two_exchange_neighbours);
+    two_exchange(0, vector_edges, two_exchange_neighbours);
     cout << "2-Exchange Neighbourhood: " << endl;
     show_state_neighbourhood(two_exchange_neighbours);
     cout << endl;
 
-    //4d - @@@@@@@@@@@@@
-    vector<vector<pair<pair<int,int>,pair<int,int>>>> temp = two_exchange_neighbours;
-    int error = 0;
-    int size = (int) temp.size();
+    //4 - Hill Climbing @@@@@@@@@@@@@
+    cout << "Hill Climbing (based on different heuristics)" << endl;
+    //4a - "Best-Improvement First" @@@@@@@@@@@@@
+    vector<vector<pair<pair<int,int>,pair<int,int>>>> temp_a;
+    two_exchange(1, vector_edges, temp_a);
+    vector<pair<pair<int,int>,pair<int,int>>> cur_a = temp_a[0];
+    while(!polygon(cur_a) && (int) temp_a.size() > 0){
+        temp_a.clear();
+        two_exchange(1, cur_a, temp_a);
+        if((int) temp_a.size() > 0) cur_a = temp_a[0];
+    }
+    cout << "Best-Improvement First: ";
+    show_vector_edges(cur_a);
+    cout << endl;
+    cur_a.clear();
+    temp_a.clear();
+
+    //4b - "First-Improvement" @@@@@@@@@@@@@
+    vector<vector<pair<pair<int,int>,pair<int,int>>>> temp_b = two_exchange_neighbours;
+    vector<pair<pair<int,int>,pair<int,int>>> cur_b = temp_b[0];
+    while(!polygon(cur_b) && (int) temp_b.size() > 0){
+        temp_b.clear();
+        two_exchange(2, cur_b, temp_b);
+        if((int) temp_b.size() > 0) cur_b = temp_b[0];
+    }
+    cout << "First-Improvement: ";
+    show_vector_edges(cur_b);
+    cout << endl;
+    cur_b.clear();
+    temp_b.clear();
+
+    //4c - "Less Edge Intersections" @@@@@@@@@@@@@
+    vector<vector<pair<pair<int,int>,pair<int,int>>>> temp_c;
+    two_exchange(3, vector_edges, temp_c);
+    vector<pair<pair<int,int>,pair<int,int>>> cur_c = temp_c[0];
+    while(!polygon(cur_c) && (int) temp_c.size() > 0){
+        temp_c.clear();
+        two_exchange(3, cur_c, temp_c);
+        if((int) temp_c.size() > 0) cur_c = temp_c[0];
+    }
+    cout << "Less Edge Intersections: ";
+    show_vector_edges(cur_c);
+    cout << endl;
+    cur_c.clear();
+    temp_c.clear();
+
+    //4d - Random Neighbour @@@@@@@@@@@@@
+    vector<vector<pair<pair<int,int>,pair<int,int>>>> temp_d = two_exchange_neighbours;
     //chosing next neighbour randomly until it hits a simple polygon
     //not sure if should have some sort of breakpoint in case of infinite loops
     srand(time(0));
-    vector<pair<pair<int,int>,pair<int,int>>> cur = temp[(rand() % ((size-1) - 0 + 1)) + 0];
-    while(intersections_num(cur) != 0){
-        temp.clear();
-        two_exchange(cur, temp);
-        if(temp.size() == 0){
-            cout << "No legit neighbours were found (inconclusive)" << endl;
-            error = 1;
-            break;
-        }
-        cur = temp[(rand() % (((int)temp.size()-1) - 0 + 1)) + 0];
+    vector<pair<pair<int,int>,pair<int,int>>> cur_d = temp_d[(rand() % (((int)temp_d.size()-1) - 0 + 1)) + 0];
+    while(!polygon(cur_d) && (int) temp_d.size() > 0){
+        temp_d.clear();
+        two_exchange(4, cur_d, temp_d);
+        if((int) temp_d.size() > 0) cur_d = temp_d[(rand() % (((int)temp_d.size()-1) - 0 + 1)) + 0];
     }
-    if(error == 0){
-        cout << "d) ";
-        show_vector_edges(cur);
-    }
+    cout << "Random Neighbour: ";
+    show_vector_edges(cur_d);
+    cur_d.clear();
+    temp_d.clear();
+
     return 0;
 }
