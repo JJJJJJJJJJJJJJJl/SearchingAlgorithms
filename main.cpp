@@ -1,22 +1,13 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-void show_vector_points(vector<pair<int,int>> v){
-    int n = (int) v.size();
+void show_vector_points(vector<pair<int,int>> points){
+    int n = (int)points.size();
     for(int i=0; i<n; i++){
-        cout << "(" << v[i].first << "," << v[i].second << ")";
+        cout << "(" << points[i].first << "," << points[i].second << ")";
         if(i != n-1){
             cout << " ";
         }
-    }
-    cout << endl;
-    return;
-}
-
-void show_vector_edges(vector<pair<pair<int,int>,pair<int,int>>> v){
-    int n = (int) v.size();
-    for(int i=0; i<n; i++){
-        cout << "[" << "(" << v[i].first.first << "," << v[i].first.second << ");(" << v[i].second.first << "," << v[i].second.second << ")" << "] ";
     }
     cout << endl;
     return;
@@ -193,26 +184,40 @@ int collinear_opposite_direction_edges(pair<pair<int,int>,pair<int,int>> a, pair
     return 1;
 }
 
-void dfs(int x, vector<int> graph[], int visited[]){
+void dfs(int flag, int x, vector<int> graph[], int visited[], map<int,pair<int,int>> point_index_reversed){
     visited[x] = 1;
+    if(flag == 2){
+        cout << "(" << point_index_reversed[x].first << "," << point_index_reversed[x].second << ") "; 
+    }
     for(int i=0; i<(int)graph[x].size(); i++){
         if(!visited[graph[x][i]]){
-            dfs(graph[x][i], graph, visited);
+            dfs(flag, graph[x][i], graph, visited, point_index_reversed);
         }
     }
     return;
 }
 
-int is_it_connected(vector<pair<pair<int,int>,pair<int,int>>> edges){
+//flag == 1, simply checks if graph's connected
+//flag == 2, also prints it
+int is_it_connected(int flag, vector<pair<pair<int,int>,pair<int,int>>> edges){
     //assigning each point an index
     map<pair<int,int>,int> point_index;
+    map<int,pair<int,int>> point_index_reversed;
     int index = 0;
     for(int i=0; i<(int)edges.size(); i++){
         if(point_index.find(edges[i].first) == point_index.end()){
-            point_index[edges[i].first] = index++;
+            point_index[edges[i].first] = index;
+            if(flag == 2){
+                point_index_reversed[index] = edges[i].first; 
+            }
+            index++;
         }
         if(point_index.find(edges[i].second) == point_index.end()){
-            point_index[edges[i].second] = index++;
+            point_index[edges[i].second] = index;
+            if(flag == 2){
+                point_index_reversed[index] = edges[i].second;
+            }
+            index++;
         }
     }
 
@@ -227,13 +232,24 @@ int is_it_connected(vector<pair<pair<int,int>,pair<int,int>>> edges){
     //then checking visited array, if all were visited(1) then is it connected
     int visited[index+1];
     memset(visited, 0, sizeof(visited));
-    dfs(0, graph, visited);
-    for(int i=0; i<index; i++){
-        if(visited[i] == 0){
-            return 0;
+    if(flag == 1){
+        dfs(1, 0, graph, visited, point_index_reversed);
+        for(int i=0; i<index; i++){
+            if(visited[i] == 0){
+                return 0;
+            }
         }
     }
+    else{
+    dfs(2, 0, graph, visited, point_index_reversed);
+    }
     return 1;
+}
+
+void show_vector_edges(vector<pair<pair<int,int>,pair<int,int>>> edges){
+    is_it_connected(2, edges);
+    cout << endl;
+    return;
 }
 
 //flag == 0 -> Generates all legit neighbours.
@@ -252,23 +268,17 @@ void two_exchange(int flag, vector<pair<pair<int,int>,pair<int,int>>> vector_edg
     for(int i=0; i<n; i++){
         set_edges.insert(vector_edges[i]);
     }
-    if(flag == 0) show_vector_edges(vector_edges);
+    //if(flag == 0) show_vector_edges(vector_edges);
     //generating neighbourhood by 2-exchange
     for(int i=0; i<n; i++){
         for(int j=0; j<n; j++){
             if(vector_edges[i] != vector_edges[j]){
-                //cout << "AHAH"<< endl;
-                //cout << "[" << "(" << vector_edges[i].first.first << "," << vector_edges[i].first.second << ");(" << vector_edges[i].second.first << "," << vector_edges[i].second.second << ")" << "] ";
-                //cout << "[" << "(" << vector_edges[j].first.first << "," << vector_edges[j].first.second << ");(" << vector_edges[j].second.first << "," << vector_edges[j].second.second << ")" << "] "<<endl;
                 if(collinear_opposite_direction_edges(vector_edges[i], vector_edges[j])){
                     continue;
                 }
                 //cout <<"BBB"<<endl;
                 if(edges_intersect(vector_edges[i].first, vector_edges[i].second, vector_edges[j].first, vector_edges[j].second) &&
                 vi.find(make_pair(vector_edges[i], vector_edges[j])) == vi.end() && vi.find(make_pair(vector_edges[j], vector_edges[i])) == vi.end()){
-                    cout << "INTERSECTION" << endl;
-                    cout << "[" << "(" << vector_edges[i].first.first << "," << vector_edges[i].first.second << ");(" << vector_edges[i].second.first << "," << vector_edges[i].second.second << ")" << "] ";
-                    cout << "[" << "(" << vector_edges[j].first.first << "," << vector_edges[j].first.second << ");(" << vector_edges[j].second.first << "," << vector_edges[j].second.second << ")" << "] "<<endl;
                     //{A,B} {C,D} -> {A,C} {B,D} 
                     pair<int,int> temp = vector_edges[i].second;
                     vector_edges[i].second = vector_edges[j].first;
@@ -278,7 +288,7 @@ void two_exchange(int flag, vector<pair<pair<int,int>,pair<int,int>>> vector_edg
                     && set_edges.find(make_pair(vector_edges[i].second, vector_edges[i].first)) == set_edges.end()
                     && set_edges.find(vector_edges[j]) == set_edges.end()
                     && set_edges.find(make_pair(vector_edges[j].second, vector_edges[j].first)) == set_edges.end()
-                    && is_it_connected(vector_edges)){
+                    && is_it_connected(1, vector_edges)){
                         int cur_perimeter = perimeter(vector_edges);//flag == 1 purposes
                         int cur_intersections = intersections(vector_edges);//flag == 3 purposes
                         if(flag == 1){
@@ -311,7 +321,7 @@ void two_exchange(int flag, vector<pair<pair<int,int>,pair<int,int>>> vector_edg
                     && set_edges.find(make_pair(vector_edges[i].second, vector_edges[i].first)) == set_edges.end()
                     && set_edges.find(vector_edges[j]) == set_edges.end()
                     && set_edges.find(make_pair(vector_edges[j].second, vector_edges[j].first)) == set_edges.end()
-                    && is_it_connected(vector_edges)){
+                    && is_it_connected(1, vector_edges)){
                         int cur_perimeter = perimeter(vector_edges);//flag == 1 purposes
                         int cur_intersections = intersections(vector_edges);//flag == 3 purposes
                         if(flag == 1){
@@ -433,7 +443,10 @@ int main(){
     vector<vector<pair<pair<int,int>,pair<int,int>>>> two_exchange_neighbours;
     two_exchange(0, vector_edges, two_exchange_neighbours);
     cout << "2-Exchange Neighbourhood:" << endl;
-    show_state_neighbourhood(two_exchange_neighbours);
+    //show_state_neighbourhood(two_exchange_neighbours);
+    for(int i=0; i<(int)two_exchange_neighbours.size(); i++){
+        show_vector_edges(two_exchange_neighbours[i]);
+    }
     cout << endl;
 
     //4 - Hill Climbing @@@@@@@@@@@@@
