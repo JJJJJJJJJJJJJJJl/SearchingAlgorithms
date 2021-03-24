@@ -40,7 +40,8 @@ void show_state_neighbourhood(vector<vector<pair<pair<int,int>,pair<int,int>>>> 
     return;
 }
 
-//here we do euclidean distance as (x1-x2)^2 + (y1-y2)^2 instead of the square root of it.
+//here we do euclidean distance as (x1-x2)^2 + (y1-y2)^2 instead of the square root of squares sum
+//to avoid floating point approximation
 int euclidean_distance(pair<int,int> p1, pair<int,int> p2){
     return ((p1.first - p2.first) * (p1.first - p2.first)) + ((p1.second - p2.second) * (p1.second - p2.second));
 }
@@ -94,6 +95,7 @@ int edges_intersect(pair<int,int> p1, pair<int,int> p2, pair<int,int> p3, pair<i
     return 0;
 }
 
+//not the perimeter exactly since euclidean distance doesn't square root the squares sum
 int perimeter(vector<pair<pair<int,int>,pair<int,int>>> edges){
     int ans = 0;
     for(int i=0; i<(int)edges.size(); i++){
@@ -102,6 +104,7 @@ int perimeter(vector<pair<pair<int,int>,pair<int,int>>> edges){
     return ans;
 }
 
+//number of intersections
 int intersections(vector<pair<pair<int,int>,pair<int,int>>> edges){
     int ans = 0;
     for(int i=0; i<(int)edges.size(); i++){
@@ -114,18 +117,19 @@ int intersections(vector<pair<pair<int,int>,pair<int,int>>> edges){
     return ans;
 }
 
+//given n points generaste n edges by the points order
 void generate_edges(vector<pair<int,int>> points, vector<pair<pair<int,int>,pair<int,int>>> &vector_edges){
     int n = (int) points.size();
     //generating edges from initial disposition
-    vector_edges.push_back(make_pair(points[n-1], points[0]));
     for(int i=1; i<n; i++){
         pair<pair<int,int>,pair<int,int>> p = make_pair(points[i-1], points[i]);
         vector_edges.push_back(p);
     }
+    vector_edges.push_back(make_pair(points[n-1], points[0]));
     return;
 }
 
-int polygon(vector<pair<pair<int,int>,pair<int,int>>> edges){
+int simple_polygon(vector<pair<pair<int,int>,pair<int,int>>> edges){
     map<pair<int,int>,int> degrees;
     for(int i=0; i<(int)edges.size(); i++){
         if(degrees.find(edges[i].first) == degrees.end()){
@@ -149,6 +153,89 @@ int polygon(vector<pair<pair<int,int>,pair<int,int>>> edges){
     return 1;
 }
 
+int scalar_product(pair<pair<int,int>,pair<int,int>> a, pair<pair<int,int>,pair<int,int>> b){
+    pair<int,int> a_vector = make_pair(a.second.first - a.first.first, a.second.second - a.first.second);
+    pair<int,int> b_vector = make_pair(b.second.first - b.first.first, b.second.second - b.first.second);
+    return ((a_vector.first * b_vector.first) + (a_vector.second * b_vector.second));
+}
+
+int collinear_opposite_direction_edges(pair<pair<int,int>,pair<int,int>> a, pair<pair<int,int>,pair<int,int>> b){
+    double a_slope;
+    double b_slope;
+
+    //vertical line, there's no slope
+    if((a.second.first - a.first.first) == 0){
+        a_slope = 42069;
+    }
+    else{
+        a_slope = fabs((a.second.second - a.first.second) / (a.second.first - a.first.first));
+    }
+
+    //vertical line, there's no slope
+    if((b.second.first - b.first.first) == 0){
+        b_slope = 42069;
+    }
+    else{
+        b_slope = fabs((b.second.second - b.first.second) / (b.second.first - b.first.first));
+    }
+
+    //edges are not collinear
+    if(a_slope != b_slope){
+        return 0;
+    }
+
+    //edges have the same direction
+    if(scalar_product(a, b) > 0){
+        return 0;
+    }
+
+    //edges are collinear and have opposite directions
+    return 1;
+}
+
+void dfs(int x, vector<int> graph[], int visited[]){
+    visited[x] = 1;
+    for(int i=0; i<(int)graph[x].size(); i++){
+        if(!visited[graph[x][i]]){
+            dfs(graph[x][i], graph, visited);
+        }
+    }
+    return;
+}
+
+int is_it_connected(vector<pair<pair<int,int>,pair<int,int>>> edges){
+    //assigning each point an index
+    map<pair<int,int>,int> point_index;
+    int index = 0;
+    for(int i=0; i<(int)edges.size(); i++){
+        if(point_index.find(edges[i].first) == point_index.end()){
+            point_index[edges[i].first] = index++;
+        }
+        if(point_index.find(edges[i].second) == point_index.end()){
+            point_index[edges[i].second] = index++;
+        }
+    }
+
+    //creating graph               
+    vector<int> graph[index+1];
+    for(int i=0; i<(int)edges.size(); i++){
+        graph[point_index[edges[i].first]].push_back(point_index[edges[i].second]);
+        graph[point_index[edges[i].second]].push_back(point_index[edges[i].first]);
+    }
+
+    //dfs through point 0
+    //then checking visited array, if all were visited(1) then is it connected
+    int visited[index+1];
+    memset(visited, 0, sizeof(visited));
+    dfs(0, graph, visited);
+    for(int i=0; i<index; i++){
+        if(visited[i] == 0){
+            return 0;
+        }
+    }
+    return 1;
+}
+
 //flag == 0 -> Generates all legit neighbours.
 //flag == 1 -> Generates all legit neighbours but only returns the one with lowest perimeter ("best-improvement first")
 //flag == 2 -> Generates first legit neighbour it finds and stops. ("first-improvement")
@@ -165,13 +252,23 @@ void two_exchange(int flag, vector<pair<pair<int,int>,pair<int,int>>> vector_edg
     for(int i=0; i<n; i++){
         set_edges.insert(vector_edges[i]);
     }
-
+    if(flag == 0) show_vector_edges(vector_edges);
     //generating neighbourhood by 2-exchange
     for(int i=0; i<n; i++){
         for(int j=0; j<n; j++){
             if(vector_edges[i] != vector_edges[j]){
+                //cout << "AHAH"<< endl;
+                //cout << "[" << "(" << vector_edges[i].first.first << "," << vector_edges[i].first.second << ");(" << vector_edges[i].second.first << "," << vector_edges[i].second.second << ")" << "] ";
+                //cout << "[" << "(" << vector_edges[j].first.first << "," << vector_edges[j].first.second << ");(" << vector_edges[j].second.first << "," << vector_edges[j].second.second << ")" << "] "<<endl;
+                if(collinear_opposite_direction_edges(vector_edges[i], vector_edges[j])){
+                    continue;
+                }
+                //cout <<"BBB"<<endl;
                 if(edges_intersect(vector_edges[i].first, vector_edges[i].second, vector_edges[j].first, vector_edges[j].second) &&
                 vi.find(make_pair(vector_edges[i], vector_edges[j])) == vi.end() && vi.find(make_pair(vector_edges[j], vector_edges[i])) == vi.end()){
+                    cout << "INTERSECTION" << endl;
+                    cout << "[" << "(" << vector_edges[i].first.first << "," << vector_edges[i].first.second << ");(" << vector_edges[i].second.first << "," << vector_edges[i].second.second << ")" << "] ";
+                    cout << "[" << "(" << vector_edges[j].first.first << "," << vector_edges[j].first.second << ");(" << vector_edges[j].second.first << "," << vector_edges[j].second.second << ")" << "] "<<endl;
                     //{A,B} {C,D} -> {A,C} {B,D} 
                     pair<int,int> temp = vector_edges[i].second;
                     vector_edges[i].second = vector_edges[j].first;
@@ -180,7 +277,8 @@ void two_exchange(int flag, vector<pair<pair<int,int>,pair<int,int>>> vector_edg
                     if(set_edges.find(vector_edges[i]) == set_edges.end() 
                     && set_edges.find(make_pair(vector_edges[i].second, vector_edges[i].first)) == set_edges.end()
                     && set_edges.find(vector_edges[j]) == set_edges.end()
-                    && set_edges.find(make_pair(vector_edges[j].second, vector_edges[j].first)) == set_edges.end()){
+                    && set_edges.find(make_pair(vector_edges[j].second, vector_edges[j].first)) == set_edges.end()
+                    && is_it_connected(vector_edges)){
                         int cur_perimeter = perimeter(vector_edges);//flag == 1 purposes
                         int cur_intersections = intersections(vector_edges);//flag == 3 purposes
                         if(flag == 1){
@@ -212,7 +310,8 @@ void two_exchange(int flag, vector<pair<pair<int,int>,pair<int,int>>> vector_edg
                     if(set_edges.find(vector_edges[i]) == set_edges.end() 
                     && set_edges.find(make_pair(vector_edges[i].second, vector_edges[i].first)) == set_edges.end()
                     && set_edges.find(vector_edges[j]) == set_edges.end()
-                    && set_edges.find(make_pair(vector_edges[j].second, vector_edges[j].first)) == set_edges.end()){
+                    && set_edges.find(make_pair(vector_edges[j].second, vector_edges[j].first)) == set_edges.end()
+                    && is_it_connected(vector_edges)){
                         int cur_perimeter = perimeter(vector_edges);//flag == 1 purposes
                         int cur_intersections = intersections(vector_edges);//flag == 3 purposes
                         if(flag == 1){
@@ -251,12 +350,10 @@ void two_exchange(int flag, vector<pair<pair<int,int>,pair<int,int>>> vector_edg
 }
 
 int main(){
-    //input 
 
+    //input 
     int flag, n;
-    //cout << "Number of points: ";
     cin >> n;
-    //cout << "Read from STDIN(1), Generate randomly(2): ";
     cin >> flag;
     
     //vector/set containg all random generated points
@@ -266,7 +363,6 @@ int main(){
     if(flag == 1){
         while((int) vector_points.size() != n){
             int x, y; 
-            //cout << "PointCoordinates@ex('x y'): ";
             cin >> x >> y;
             pair<int,int> p = make_pair(x, y);
             vector_points.push_back(p);
@@ -347,7 +443,7 @@ int main(){
     two_exchange(1, vector_edges, temp_a);
     vector<pair<pair<int,int>,pair<int,int>>> cur_a = temp_a[0];
     vector<pair<pair<int,int>,pair<int,int>>> last_a;
-    while(!polygon(cur_a) && (int) temp_a.size() > 0){
+    while(!simple_polygon(cur_a) && (int) temp_a.size() > 0){
         temp_a.clear();
         two_exchange(1, cur_a, temp_a);
         last_a = cur_a;
@@ -368,7 +464,7 @@ int main(){
     vector<vector<pair<pair<int,int>,pair<int,int>>>> temp_b = two_exchange_neighbours;
     vector<pair<pair<int,int>,pair<int,int>>> cur_b = temp_b[0];
     vector<pair<pair<int,int>,pair<int,int>>> last_b;
-    while(!polygon(cur_b) && (int) temp_b.size() > 0){
+    while(!simple_polygon(cur_b) && (int) temp_b.size() > 0){
         temp_b.clear();
         two_exchange(2, cur_b, temp_b);
         last_b = cur_b;
@@ -390,7 +486,7 @@ int main(){
     two_exchange(3, vector_edges, temp_c);
     vector<pair<pair<int,int>,pair<int,int>>> cur_c = temp_c[0];
     vector<pair<pair<int,int>,pair<int,int>>> last_c;
-    while(!polygon(cur_c) && (int) temp_c.size() > 0){
+    while(!simple_polygon(cur_c) && (int) temp_c.size() > 0){
         temp_c.clear();
         two_exchange(3, cur_c, temp_c);
         last_c = cur_c;
@@ -414,7 +510,7 @@ int main(){
     srand(time(0));
     vector<pair<pair<int,int>,pair<int,int>>> cur_d = temp_d[(rand() % (((int)temp_d.size()-1) - 0 + 1)) + 0];
     vector<pair<pair<int,int>,pair<int,int>>> last_d;
-    while(!polygon(cur_d) && (int) temp_d.size() > 0){
+    while(!simple_polygon(cur_d) && (int) temp_d.size() > 0){
         temp_d.clear();
         two_exchange(4, cur_d, temp_d);
         last_d = cur_d;
