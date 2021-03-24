@@ -95,7 +95,7 @@ int perimeter(vector<pair<pair<int,int>,pair<int,int>>> edges){
     return ans;
 }
 
-//number of intersections
+//number of intersections given a cycle
 int intersections(vector<pair<pair<int,int>,pair<int,int>>> edges){
     int ans = 0;
     for(int i=0; i<(int)edges.size(); i++){
@@ -120,6 +120,7 @@ void generate_edges(vector<pair<int,int>> points, vector<pair<pair<int,int>,pair
     return;
 }
 
+//is it a simple polygon??
 int simple_polygon(vector<pair<pair<int,int>,pair<int,int>>> edges){
     map<pair<int,int>,int> degrees;
     for(int i=0; i<(int)edges.size(); i++){
@@ -198,7 +199,7 @@ void dfs(int flag, int x, vector<int> graph[], int visited[], map<int,pair<int,i
 }
 
 //flag == 1, simply checks if graph's connected
-//flag == 2, also prints it
+//flag == 2, printint purposes (show_vector_edges, so instead of printing edges like "[[(x1,y1).(x2,y2)]]" it prints the actual points.
 int is_it_connected(int flag, vector<pair<pair<int,int>,pair<int,int>>> edges){
     //assigning each point an index
     map<pair<int,int>,int> point_index;
@@ -221,7 +222,7 @@ int is_it_connected(int flag, vector<pair<pair<int,int>,pair<int,int>>> edges){
         }
     }
 
-    //creating graph               
+    //creating the adjacency list               
     vector<int> graph[index+1];
     for(int i=0; i<(int)edges.size(); i++){
         graph[point_index[edges[i].first]].push_back(point_index[edges[i].second]);
@@ -229,7 +230,7 @@ int is_it_connected(int flag, vector<pair<pair<int,int>,pair<int,int>>> edges){
     }
 
     //dfs through point 0
-    //then checking visited array, if all were visited(1) then is it connected
+    //then checking visited array, if all were visited(1) then it is connected
     int visited[index+1];
     memset(visited, 0, sizeof(visited));
     if(flag == 1){
@@ -241,7 +242,7 @@ int is_it_connected(int flag, vector<pair<pair<int,int>,pair<int,int>>> edges){
         }
     }
     else{
-    dfs(2, 0, graph, visited, point_index_reversed);
+        dfs(2, 0, graph, visited, point_index_reversed);
     }
     return 1;
 }
@@ -283,12 +284,51 @@ void two_exchange(int flag, vector<pair<pair<int,int>,pair<int,int>>> vector_edg
                     pair<int,int> temp = vector_edges[i].second;
                     vector_edges[i].second = vector_edges[j].first;
                     vector_edges[j].first = temp;
+                    int left = -1;
+                    int right = -1;
                     //if new edges dont already exist
                     if(set_edges.find(vector_edges[i]) == set_edges.end() 
                     && set_edges.find(make_pair(vector_edges[i].second, vector_edges[i].first)) == set_edges.end()
                     && set_edges.find(vector_edges[j]) == set_edges.end()
                     && set_edges.find(make_pair(vector_edges[j].second, vector_edges[j].first)) == set_edges.end()
                     && is_it_connected(1, vector_edges)){
+
+                        //reversing path within intersecting edges
+                        if(abs(i - j) > 1){
+                            if(i > j){
+                                left = j+1;
+                                right = i-1;
+                            }
+                            else{
+                                left = i+1;
+                                right = j-1;
+                            }
+                            //so left n right are saved allowing the opposite operation
+                            int left_to_reverse = left;
+                            int right_to_reverse = right;
+
+                            while(left <= right){
+                                pair<int,int> temp = vector_edges[left].first;
+                                vector_edges[left].first = vector_edges[left].second;
+                                vector_edges[left].second = temp;
+
+                                temp = vector_edges[right].first;
+                                vector_edges[right].first = vector_edges[right].second;
+                                vector_edges[right].second = temp;
+
+                                if(left != right){
+                                    pair<pair<int,int>,pair<int,int>> temp2 = vector_edges[left];
+                                    vector_edges[left] = vector_edges[right];
+                                    vector_edges[right] = temp2;
+                                }
+                                left++;
+                                right--;
+                            }
+                            //left n right recovered 
+                            left = left_to_reverse;
+                            right = right_to_reverse;
+                        }
+
                         int cur_perimeter = perimeter(vector_edges);//flag == 1 purposes
                         int cur_intersections = intersections(vector_edges);//flag == 3 purposes
                         if(flag == 1){
@@ -312,7 +352,31 @@ void two_exchange(int flag, vector<pair<pair<int,int>,pair<int,int>>> vector_edg
                     vector_edges[i].second = vector_edges[j].first;
                     vector_edges[j].first = temp;
 
+                    //reseting reversed path
+                    if(left != -1 && right != -1){
+                        while(left <= right){
+                            pair<int,int> temp = vector_edges[left].first;
+                            vector_edges[left].first = vector_edges[left].second;
+                            vector_edges[left].second = temp;
+
+                            temp = vector_edges[right].first;
+                            vector_edges[right].first = vector_edges[right].second;
+                            vector_edges[right].second = temp;
+
+                            if(left != right){
+                                pair<pair<int,int>,pair<int,int>> temp2 = vector_edges[left];
+                                vector_edges[left] = vector_edges[right];
+                                vector_edges[right] = temp2;
+                            }
+                            left++;
+                            right--;
+                        }
+                    }
+
                     //{A,B} {C,D} -> {A,D} {C,B}
+                    //not so sure how this case should be reversed, couldnt find a single test case where
+                    //this one didnt disconnect the path, so here's probably a bug. 
+
                     temp = vector_edges[i].second;
                     vector_edges[i].second = vector_edges[j].second;
                     vector_edges[j].second = temp;
@@ -383,7 +447,6 @@ int main(){
     else if(flag == 2){
         //1 - generating n points in range[-m..m] @@@@@@@@@@@@@
         int m;
-        cout << "Range (x -> [-x..x]): ";
         cin >> m;
         srand(time(0));
         for(int i=0; i<n; i++){
@@ -443,7 +506,11 @@ int main(){
     vector<vector<pair<pair<int,int>,pair<int,int>>>> two_exchange_neighbours;
     two_exchange(0, vector_edges, two_exchange_neighbours);
     cout << "2-Exchange Neighbourhood:" << endl;
-    //show_state_neighbourhood(two_exchange_neighbours);
+    if((int)two_exchange_neighbours.size() == 0){
+        cout << "Polygon already found. (as shown below)" << endl;
+        show_vector_points(vector_points);
+        return 0;
+    }
     for(int i=0; i<(int)two_exchange_neighbours.size(); i++){
         show_vector_edges(two_exchange_neighbours[i]);
     }
@@ -541,3 +608,21 @@ int main(){
 
     return 0;
 }
+
+
+//A B C D E F
+
+//Exchange case 1, AB CD -> AC BD 
+//[(1,1),(3,3)] [(3,3),(5,0)] [(5,0),(2,-1)] [(2,-1),(3,1)] [(3,1),(1,3)] [(1,3),(1,1)]
+//------------                                              -------------
+//[(1,1),(3,1)] [(3,3),(5,0)] [(5,0),(2,-1)] [(2,-1),(3,1)] [(3,3),(1,3)] [(1,3),(1,1)]
+//        **                                                  **
+//[(1,1),(3,1)] [(3,3),(5,0)] [(5,0),(2,-1)] [(2,-1),(3,1)] [(3,3),(1,3)] [(1,3),(1,1)]   
+//             [(2,-1),(3,1)] [(5,0),(2,-1)] [(3,3),(5,0)]
+//             [(3,1),(2,-1)] [(2,-1),(5,0)] [(5,0),(3,3)]
+//FINAL:
+//[(1,1),(3,1)] [(3,1),(2,-1)] [(2,-1),(5,0)] [(5,0),(3,3)] [(3,3),(1,3)] [(1,3),(1,1)]
+
+
+//Exchange case 2, AB CD -> AD CB
+//No test cases found, unknown...404
