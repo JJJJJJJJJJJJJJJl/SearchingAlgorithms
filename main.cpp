@@ -154,6 +154,7 @@ int scalar_product(pair<pair<int,int>,pair<int,int>> a, pair<pair<int,int>,pair<
 int collinear_opposite_direction_edges(pair<pair<int,int>,pair<int,int>> a, pair<pair<int,int>,pair<int,int>> b){
     double a_slope;
     double b_slope;
+    double c_slope;
 
     //vertical line, there's no slope
     if((a.second.first - a.first.first) == 0){
@@ -171,8 +172,16 @@ int collinear_opposite_direction_edges(pair<pair<int,int>,pair<int,int>> a, pair
         b_slope = fabs((b.second.second - b.first.second) / (b.second.first - b.first.first));
     }
 
+     //vertical line, there's no slope
+    if((b.first.first - a.second.first) == 0){
+        c_slope = 42069;
+    }
+    else{
+        c_slope = fabs((b.first.second - a.second.second) / (b.first.first - a.second.first));
+    }
+
     //edges are not collinear
-    if(a_slope != b_slope){
+    if(a_slope != b_slope && b_slope != c_slope && a_slope != c_slope){
         return 0;
     }
 
