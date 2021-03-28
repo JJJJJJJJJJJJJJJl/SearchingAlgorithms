@@ -180,18 +180,13 @@ int collinear_opposite_direction_edges(pair<pair<int,int>,pair<int,int>> a, pair
         c_slope = fabs((b.first.second - a.second.second) / (b.first.first - a.second.first));
     }
 
-    //edges are not collinear
-    if(a_slope != b_slope && b_slope != c_slope && a_slope != c_slope){
-        return 0;
+    //edges collinear and lay in opposite directions
+    if(a_slope == b_slope && b_slope == c_slope && a_slope == c_slope && scalar_product(a, b) < 0){
+        return 1;
     }
 
-    //edges have the same direction
-    if(scalar_product(a, b) > 0){
-        return 0;
-    }
-
-    //edges are collinear and have opposite directions
-    return 1;
+    //they're not
+    return 0;
 }
 
 void dfs(int flag, int x, vector<int> graph[], int visited[], map<int,pair<int,int>> point_index_reversed){
@@ -268,6 +263,7 @@ void show_vector_edges(vector<pair<pair<int,int>,pair<int,int>>> edges){
 //flag == 3 -> Genereates all legit neighbours but only returns the one with less edge intersections.
 //flag == 4 -> Generates all legit neighbours since we choosing one randomly.
 void two_exchange(int flag, vector<pair<pair<int,int>,pair<int,int>>> vector_edges, vector<vector<pair<pair<int,int>,pair<int,int>>>> &neighbourhood){
+    int current_state_perimeter = perimeter(vector_edges);
     int lowest_perimeter = INT_MAX;//flag == 1 purposes, assuming perimeters wont go beyond INT_MAX (2147483647)
     int lowest_intersections = INT_MAX;//flag == 3 purposes, also assuming intersections wont go beyond INT_MAX (2147483647)
     int n = (int) vector_edges.size();
@@ -338,9 +334,10 @@ void two_exchange(int flag, vector<pair<pair<int,int>,pair<int,int>>> vector_edg
                             right = right_to_reverse;
                         }
 
-                        int cur_perimeter = perimeter(vector_edges);//flag == 1 purposes
-                        int cur_intersections = intersections(vector_edges);//flag == 3 purposes
+                        int cur_perimeter;//flag == 1 purposes
+                        int cur_intersections;//flag == 3 purposes
                         if(flag == 1){
+                            cur_perimeter = perimeter(vector_edges);
                             if(cur_perimeter < lowest_perimeter){
                                 neighbourhood.clear();
                                 neighbourhood.push_back(vector_edges);
@@ -348,6 +345,7 @@ void two_exchange(int flag, vector<pair<pair<int,int>,pair<int,int>>> vector_edg
                             }
                         }
                         else if(flag == 3){
+                            cur_intersections = intersections(vector_edges);
                             if(cur_intersections < lowest_intersections){
                                 neighbourhood.clear();
                                 neighbourhood.push_back(vector_edges);
@@ -395,9 +393,10 @@ void two_exchange(int flag, vector<pair<pair<int,int>,pair<int,int>>> vector_edg
                     && set_edges.find(vector_edges[j]) == set_edges.end()
                     && set_edges.find(make_pair(vector_edges[j].second, vector_edges[j].first)) == set_edges.end()
                     && is_it_connected(1, vector_edges)){
-                        int cur_perimeter = perimeter(vector_edges);//flag == 1 purposes
-                        int cur_intersections = intersections(vector_edges);//flag == 3 purposes
+                        int cur_perimeter;//flag == 1 purposes
+                        int cur_intersections;//flag == 3 purposes
                         if(flag == 1){
+                            cur_perimeter = perimeter(vector_edges);
                             if(cur_perimeter < lowest_perimeter){
                                 neighbourhood.clear();
                                 neighbourhood.push_back(vector_edges);
@@ -405,6 +404,7 @@ void two_exchange(int flag, vector<pair<pair<int,int>,pair<int,int>>> vector_edg
                             }
                         }
                         else if(flag == 3){
+                            cur_intersections = intersections(vector_edges);
                             if(cur_intersections < lowest_intersections){
                                 neighbourhood.clear();
                                 neighbourhood.push_back(vector_edges);
@@ -419,8 +419,13 @@ void two_exchange(int flag, vector<pair<pair<int,int>,pair<int,int>>> vector_edg
                     vector_edges[j].second = temp;
 
                     //first legit neighbour was found
-                    if(flag == 2 && (int) neighbourhood.size() > 0){
-                        return;
+                    if(flag == 2){
+                        if((int) neighbourhood.size() > 0 && perimeter(neighbourhood[0]) < current_state_perimeter){
+                            return;
+                        }
+                        else{
+                            neighbourhood.clear();
+                        }
                     }
 
                     vi.insert(make_pair(vector_edges[i], vector_edges[j]));
@@ -430,6 +435,16 @@ void two_exchange(int flag, vector<pair<pair<int,int>,pair<int,int>>> vector_edg
         }
     }
     return;
+}
+
+int P(int chosen_neighbour_intersections, int current_state_intersections, double T){
+    int diff = chosen_neighbour_intersections - current_state_intersections;
+    srand(time(0));
+    double metropolis = (rand() / double(RAND_MAX)); 
+    if(diff < 0 || metropolis < exp(-diff / T)){
+        return 1;
+    }
+    return 0;
 }
 
 int main(){
@@ -531,14 +546,15 @@ int main(){
     vector<vector<pair<pair<int,int>,pair<int,int>>>> temp_a;
     two_exchange(1, vector_edges, temp_a);
     vector<pair<pair<int,int>,pair<int,int>>> cur_a = temp_a[0];
-    vector<pair<pair<int,int>,pair<int,int>>> last_a;
-    while(!simple_polygon(cur_a) && (int) temp_a.size() > 0){
+    vector<pair<pair<int,int>,pair<int,int>>> last_a = cur_a;
+    while(perimeter(cur_a) <= perimeter(last_a)){
         temp_a.clear();
         two_exchange(1, cur_a, temp_a);
         last_a = cur_a;
-        if((int) temp_a.size() > 0) cur_a = temp_a[0];
-        //it breaks when candidate's worse than current state
-        if(perimeter(cur_a) > perimeter(last_a)){
+        if((int) temp_a.size() > 0){
+            cur_a = temp_a[0];
+        }
+        else{
             break;
         }
     }
@@ -552,14 +568,15 @@ int main(){
     //4b - "First-Improvement" @@@@@@@@@@@@@
     vector<vector<pair<pair<int,int>,pair<int,int>>>> temp_b = two_exchange_neighbours;
     vector<pair<pair<int,int>,pair<int,int>>> cur_b = temp_b[0];
-    vector<pair<pair<int,int>,pair<int,int>>> last_b;
-    while(!simple_polygon(cur_b) && (int) temp_b.size() > 0){
+    vector<pair<pair<int,int>,pair<int,int>>> last_b = cur_b;
+    while(perimeter(cur_b) <= perimeter(last_b)){
         temp_b.clear();
         two_exchange(2, cur_b, temp_b);
         last_b = cur_b;
-        if((int) temp_b.size() > 0) cur_b = temp_b[0];
-        //it breaks when candidate's worse than current state
-        if(perimeter(cur_b) > perimeter(last_b)){
+        if((int) temp_b.size() > 0){
+            cur_b = temp_b[0];
+        }
+        else{
             break;
         }
     }
@@ -574,14 +591,15 @@ int main(){
     vector<vector<pair<pair<int,int>,pair<int,int>>>> temp_c;
     two_exchange(3, vector_edges, temp_c);
     vector<pair<pair<int,int>,pair<int,int>>> cur_c = temp_c[0];
-    vector<pair<pair<int,int>,pair<int,int>>> last_c;
-    while(!simple_polygon(cur_c) && (int) temp_c.size() > 0){
+    vector<pair<pair<int,int>,pair<int,int>>> last_c = cur_c;
+    while(perimeter(cur_c) <= perimeter(last_c)){
         temp_c.clear();
         two_exchange(3, cur_c, temp_c);
         last_c = cur_c;
-        if((int) temp_c.size() > 0) cur_c = temp_c[0];
-        //it breaks when candidate's worse than current state
-        if(perimeter(cur_c) > perimeter(last_c)){
+        if((int) temp_c.size() > 0){
+            cur_c = temp_c[0];
+        }
+        else{
             break;
         }
     }
@@ -594,26 +612,65 @@ int main(){
 
     //4d - Random Neighbour @@@@@@@@@@@@@
     vector<vector<pair<pair<int,int>,pair<int,int>>>> temp_d = two_exchange_neighbours;
-    //chosing next neighbour randomly until it hits a simple polygon
-    //not sure if should have some sort of breakpoint in case of infinite loops
     srand(time(0));
     vector<pair<pair<int,int>,pair<int,int>>> cur_d = temp_d[(rand() % (((int)temp_d.size()-1) - 0 + 1)) + 0];
-    vector<pair<pair<int,int>,pair<int,int>>> last_d;
-    while(!simple_polygon(cur_d) && (int) temp_d.size() > 0){
+    vector<pair<pair<int,int>,pair<int,int>>> last_d = cur_d;
+    while(perimeter(cur_d) <= perimeter(last_d)){
         temp_d.clear();
         two_exchange(4, cur_d, temp_d);
         last_d = cur_d;
-        if((int) temp_d.size() > 0) cur_d = temp_d[(rand() % (((int)temp_d.size()-1) - 0 + 1)) + 0];
-        //it breaks when candidate's worse than current state
-        if(perimeter(cur_d) > perimeter(last_d)){
+        if((int) temp_d.size() > 0){
+            cur_d = temp_d[(rand() % (((int)temp_d.size()-1) - 0 + 1)) + 0];
+        }
+        else{
             break;
         }
     }
     cout << "Random Neighbour: ";
     show_vector_edges(cur_d);
+    cout << endl;
     cur_d.clear();
     last_d.clear();
     temp_d.clear();
+
+    //5 - Simulated Annealing @@@@@@@@@@@@@
+    //Energy in this context meaning number of intersections
+    vector<vector<pair<pair<int,int>,pair<int,int>>>> temp_sa = two_exchange_neighbours;
+    srand(time(0));
+    vector<pair<pair<int,int>,pair<int,int>>> cur_sa = temp_sa[(rand() % (((int)temp_sa.size()-1) - 0 + 1)) + 0];
+    vector<pair<pair<int,int>,pair<int,int>>> last_sa = cur_sa  ;
+    vector<pair<pair<int,int>,pair<int,int>>> best_sa = cur_sa;
+    int best_sa_energy = intersections(best_sa);
+    double T = 1000;
+    double cooling_rate = 0.95;
+    int max_steps = 500;
+    while(max_steps-- != 0 && T > 0){
+        temp_sa.clear();
+        two_exchange(0, cur_sa, temp_sa);
+        if((int) temp_sa.size() > 0){
+            //vector<vector<pair<pair<int,int>,pair<int,int>>>> temp_temp_sa = temp_sa;
+            cur_sa = temp_sa[(rand() % (((int)temp_sa.size()-1) - 0 + 1)) + 0];
+            int cur_sa_energy = intersections(cur_sa);
+            int last_sa_energy = intersections(last_sa);
+            while(!P(cur_sa_energy, last_sa_energy, T) && max_steps != 0){
+                cur_sa = temp_sa[(rand() % (((int)temp_sa.size()-1) - 0 + 1)) + 0];
+                cur_sa_energy = intersections(cur_sa); 
+                //temp_temp_sa.erase(temp_temp_sa.find(cur_sa));
+                T *= cooling_rate; 
+            }
+            max_steps--;
+            if(cur_sa_energy < best_sa_energy){
+                best_sa_energy = cur_sa_energy;
+                best_sa = cur_sa;
+            }
+        }
+        else{
+            break;
+        }
+        T *= cooling_rate;
+    }
+    cout << "Simulated Annealing: ";
+    show_vector_edges(best_sa);
 
     return 0;
 }
