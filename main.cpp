@@ -525,16 +525,24 @@ int main(){
     cout << endl;
 
     //3 - "2-exchange" @@@@@@@@@@@@@
+
+    //generating edges
     vector<pair<pair<int,int>,pair<int,int>>> vector_edges;
     generate_edges(vector_points, vector_edges);
+
+    //generating neighbourhood by 2-exchange
     vector<vector<pair<pair<int,int>,pair<int,int>>>> two_exchange_neighbours;
     two_exchange(0, vector_edges, two_exchange_neighbours);
     cout << "2-Exchange Neighbourhood:" << endl;
+
+    //if theres no neighbours that means there were no intersections so we already reached the goal
     if((int)two_exchange_neighbours.size() == 0){
         cout << "Polygon already found. (as shown below)" << endl;
         show_vector_points(vector_points);
         return 0;
     }
+
+    //printing neighbourhood
     for(int i=0; i<(int)two_exchange_neighbours.size(); i++){
         show_vector_edges(two_exchange_neighbours[i]);
     }
@@ -542,126 +550,127 @@ int main(){
 
     //4 - Hill Climbing @@@@@@@@@@@@@
     cout << "Hill Climbing (based on different heuristics):" << endl;
+
     //4a - "Best-Improvement First" @@@@@@@@@@@@@
-    vector<vector<pair<pair<int,int>,pair<int,int>>>> temp_a;
-    two_exchange(1, vector_edges, temp_a);
-    vector<pair<pair<int,int>,pair<int,int>>> cur_a = temp_a[0];
-    vector<pair<pair<int,int>,pair<int,int>>> last_a = cur_a;
-    while(perimeter(cur_a) <= perimeter(last_a)){
-        temp_a.clear();
-        two_exchange(1, cur_a, temp_a);
-        last_a = cur_a;
-        if((int) temp_a.size() > 0){
-            cur_a = temp_a[0];
+    vector<vector<pair<pair<int,int>,pair<int,int>>>> temp;
+    two_exchange(1, vector_edges, temp);
+    vector<pair<pair<int,int>,pair<int,int>>> cur = temp[0];
+    vector<pair<pair<int,int>,pair<int,int>>> last = cur;
+    while(perimeter(cur) <= perimeter(last)){
+        temp.clear();
+        two_exchange(1, cur, temp);
+        last = cur;
+        if((int) temp.size() > 0){
+            cur = temp[0];
         }
         else{
             break;
         }
     }
-    cout << "Best-Improvement First: ";
-    show_vector_edges(cur_a);
+    cout << " - Best-Improvement First: ";
+    show_vector_edges(cur);
     cout << endl;
-    cur_a.clear();
-    last_a.clear();
-    temp_a.clear();
+    cur.clear();
+    last.clear();
+    temp.clear();
 
     //4b - "First-Improvement" @@@@@@@@@@@@@
-    vector<vector<pair<pair<int,int>,pair<int,int>>>> temp_b = two_exchange_neighbours;
-    vector<pair<pair<int,int>,pair<int,int>>> cur_b = temp_b[0];
-    vector<pair<pair<int,int>,pair<int,int>>> last_b = cur_b;
-    while(perimeter(cur_b) <= perimeter(last_b)){
-        temp_b.clear();
-        two_exchange(2, cur_b, temp_b);
-        last_b = cur_b;
-        if((int) temp_b.size() > 0){
-            cur_b = temp_b[0];
+    temp = two_exchange_neighbours;
+    cur = temp[0];
+    last = cur;
+    while(perimeter(cur) <= perimeter(last)){
+        temp.clear();
+        two_exchange(2, cur, temp);
+        last = cur;
+        if((int) temp.size() > 0){
+            cur = temp[0];
         }
         else{
             break;
         }
     }
-    cout << "First-Improvement: ";
-    show_vector_edges(cur_b);
+    cout << " - First-Improvement: ";
+    show_vector_edges(cur);
     cout << endl;
-    cur_b.clear();
-    last_b.clear();
-    temp_b.clear();
+    cur.clear();
+    last.clear();
+    temp.clear();
 
     //4c - "Less Edge Intersections" @@@@@@@@@@@@@
-    vector<vector<pair<pair<int,int>,pair<int,int>>>> temp_c;
-    two_exchange(3, vector_edges, temp_c);
-    vector<pair<pair<int,int>,pair<int,int>>> cur_c = temp_c[0];
-    vector<pair<pair<int,int>,pair<int,int>>> last_c = cur_c;
-    while(perimeter(cur_c) <= perimeter(last_c)){
-        temp_c.clear();
-        two_exchange(3, cur_c, temp_c);
-        last_c = cur_c;
-        if((int) temp_c.size() > 0){
-            cur_c = temp_c[0];
+    two_exchange(3, vector_edges, temp);
+    cur = temp[0];
+    last = cur;
+    while(perimeter(cur) <= perimeter(last)){
+        temp.clear();
+        two_exchange(3, cur, temp);
+        last = cur;
+        if((int) temp.size() > 0){
+            cur = temp[0];
         }
         else{
             break;
         }
     }
-    cout << "Less Edge Intersections: ";
-    show_vector_edges(cur_c);
+    cout << " - Less Edge Intersections: ";
+    show_vector_edges(cur);
     cout << endl;
-    cur_c.clear();
-    last_c.clear();
-    temp_c.clear();
+    cur.clear();
+    last.clear();
+    temp.clear();
 
     //4d - Random Neighbour @@@@@@@@@@@@@
-    vector<vector<pair<pair<int,int>,pair<int,int>>>> temp_d = two_exchange_neighbours;
+    temp = two_exchange_neighbours;
     srand(time(0));
-    vector<pair<pair<int,int>,pair<int,int>>> cur_d = temp_d[(rand() % (((int)temp_d.size()-1) - 0 + 1)) + 0];
-    vector<pair<pair<int,int>,pair<int,int>>> last_d = cur_d;
-    while(perimeter(cur_d) <= perimeter(last_d)){
-        temp_d.clear();
-        two_exchange(4, cur_d, temp_d);
-        last_d = cur_d;
-        if((int) temp_d.size() > 0){
-            cur_d = temp_d[(rand() % (((int)temp_d.size()-1) - 0 + 1)) + 0];
+    cur = temp[(rand() % (((int)temp.size()-1) - 0 + 1)) + 0];
+    last = cur;
+    while(perimeter(cur) <= perimeter(last)){
+        temp.clear();
+        two_exchange(4, cur, temp);
+        last = cur;
+        if((int) temp.size() > 0){
+            cur = temp[(rand() % (((int)temp.size()-1) - 0 + 1)) + 0];
         }
         else{
             break;
         }
     }
-    cout << "Random Neighbour: ";
-    show_vector_edges(cur_d);
+    cout << " - Random Neighbour: ";
+    show_vector_edges(cur);
     cout << endl;
-    cur_d.clear();
-    last_d.clear();
-    temp_d.clear();
+    cur.clear();
+    last.clear();
+    temp.clear();
 
     //5 - Simulated Annealing @@@@@@@@@@@@@
-    //Energy in this context meaning number of intersections
-    vector<vector<pair<pair<int,int>,pair<int,int>>>> temp_sa = two_exchange_neighbours;
+    //Energy meaning number of intersections
+    temp = two_exchange_neighbours;
     srand(time(0));
-    vector<pair<pair<int,int>,pair<int,int>>> cur_sa = temp_sa[(rand() % (((int)temp_sa.size()-1) - 0 + 1)) + 0];
-    vector<pair<pair<int,int>,pair<int,int>>> last_sa = cur_sa  ;
-    vector<pair<pair<int,int>,pair<int,int>>> best_sa = cur_sa;
+    cur = temp[(rand() % (((int)temp.size()-1) - 0 + 1)) + 0];
+    last = cur;
+    vector<pair<pair<int,int>,pair<int,int>>> best_sa = cur;
     int best_sa_energy = intersections(best_sa);
+
+    //constants
     double T = 1000;
     double cooling_rate = 0.95;
-    int max_steps = 500;
-    while(max_steps-- != 0 && T > 0){
-        temp_sa.clear();
-        two_exchange(0, cur_sa, temp_sa);
-        if((int) temp_sa.size() > 0){
-            //vector<vector<pair<pair<int,int>,pair<int,int>>>> temp_temp_sa = temp_sa;
-            cur_sa = temp_sa[(rand() % (((int)temp_sa.size()-1) - 0 + 1)) + 0];
-            int cur_sa_energy = intersections(cur_sa);
-            int last_sa_energy = intersections(last_sa);
-            while(!P(cur_sa_energy, last_sa_energy, T) && max_steps != 0){
-                cur_sa = temp_sa[(rand() % (((int)temp_sa.size()-1) - 0 + 1)) + 0];
-                cur_sa_energy = intersections(cur_sa); 
-                //temp_temp_sa.erase(temp_temp_sa.find(cur_sa));
+    /* int max_steps = 500; */
+
+    while(/* max_steps-- != 0 &&  */T > 0){
+        temp.clear();
+        two_exchange(0, cur, temp);
+        if((int) temp.size() > 0){
+            cur = temp[(rand() % (((int)temp.size()-1) - 0 + 1)) + 0];
+            int cur_energy = intersections(cur);
+            int last_energy = intersections(last);
+            while(!P(cur_energy, last_energy, T)/*  && max_steps != 0 */){
+                cur = temp[(rand() % (((int)temp.size()-1) - 0 + 1)) + 0];
+                cur_energy = intersections(cur); 
                 T *= cooling_rate; 
+                /* max_steps--; */
             }
-            max_steps--;
-            if(cur_sa_energy < best_sa_energy){
-                best_sa_energy = cur_sa_energy;
-                best_sa = cur_sa;
+            if(cur_energy < best_sa_energy){
+                best_sa_energy = cur_energy;
+                best_sa = cur;
             }
         }
         else{
