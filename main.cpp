@@ -69,7 +69,7 @@ int edges_intersect(pair<int,int> p1, pair<int,int> p2, pair<int,int> p3, pair<i
     return 0;
 }
 
-//not the perimeter exactly since euclidean distance doesn't square root the squares sum
+//not the perimeter exactly since euclidean distance doesn't square root the squares sum so it avoids floating point approximations
 int perimeter(vector<pair<pair<int,int>,pair<int,int>>> edges){
     int ans = 0;
     for(int i=0; i<(int)edges.size(); i++){
