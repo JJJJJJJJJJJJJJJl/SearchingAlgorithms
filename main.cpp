@@ -1,6 +1,7 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+//prints points as they appear in vector
 void show_vector_points(vector<pair<int,int>> points){
     int n = (int)points.size();
     for(int i=0; i<n; i++){
@@ -10,24 +11,6 @@ void show_vector_points(vector<pair<int,int>> points){
         }
     }
     cout << endl;
-    return;
-}
-
-void show_set(set<pair<pair<int,int>,pair<int,int>>> set){
-    for(pair<pair<int,int>,pair<int,int>> edge : set){
-        cout << "[" << "(" << edge.first.first << "," << edge.first.second << ");(" << edge.second.first << "," << edge.second.second << ")" << "] ";
-    }
-    cout << endl;
-    return;
-}
-
-void show_state_neighbourhood(vector<vector<pair<pair<int,int>,pair<int,int>>>> v){
-    for(int i=0; i<(int)v.size(); i++){
-        for(int j=0; j<(int)v[i].size(); j++){
-            cout << "[" << "(" << v[i][j].first.first << "," << v[i][j].first.second << ");(" << v[i][j].second.first << "," << v[i][j].second.second << ")" << "] ";
-        }   
-        cout << endl;
-    }
     return;
 }
 
@@ -120,7 +103,7 @@ void generate_edges(vector<pair<int,int>> points, vector<pair<pair<int,int>,pair
     return;
 }
 
-//is it a simple polygon??
+/* //is it a simple polygon??
 int simple_polygon(vector<pair<pair<int,int>,pair<int,int>>> edges){
     map<pair<int,int>,int> degrees;
     for(int i=0; i<(int)edges.size(); i++){
@@ -143,14 +126,16 @@ int simple_polygon(vector<pair<pair<int,int>,pair<int,int>>> edges){
         return 0;
     }
     return 1;
-}
+} */
 
+//scalar product of two segments
 int scalar_product(pair<pair<int,int>,pair<int,int>> a, pair<pair<int,int>,pair<int,int>> b){
     pair<int,int> a_vector = make_pair(a.second.first - a.first.first, a.second.second - a.first.second);
     pair<int,int> b_vector = make_pair(b.second.first - b.first.first, b.second.second - b.first.second);
     return ((a_vector.first * b_vector.first) + (a_vector.second * b_vector.second));
 }
 
+//checks direction and collinearity between two segments
 int collinear_opposite_direction_edges(pair<pair<int,int>,pair<int,int>> a, pair<pair<int,int>,pair<int,int>> b){
     double a_slope;
     double b_slope;
@@ -189,6 +174,7 @@ int collinear_opposite_direction_edges(pair<pair<int,int>,pair<int,int>> a, pair
     return 0;
 }
 
+//classic dfs
 void dfs(int flag, int x, vector<int> graph[], int visited[], map<int,pair<int,int>> point_index_reversed){
     visited[x] = 1;
     if(flag == 2){
@@ -203,7 +189,7 @@ void dfs(int flag, int x, vector<int> graph[], int visited[], map<int,pair<int,i
 }
 
 //flag == 1, simply checks if graph's connected
-//flag == 2, printint purposes (show_vector_edges, so instead of printing edges like "[[(x1,y1).(x2,y2)]]" it prints the actual points.
+//flag == 2, printing purposes (show_vector_edges, so instead of printing edges like "[[(x1,y1).(x2,y2)]]" it prints the actual points)
 int is_it_connected(int flag, vector<pair<pair<int,int>,pair<int,int>>> edges){
     //assigning each point an index
     map<pair<int,int>,int> point_index;
@@ -233,7 +219,7 @@ int is_it_connected(int flag, vector<pair<pair<int,int>,pair<int,int>>> edges){
         graph[point_index[edges[i].second]].push_back(point_index[edges[i].first]);
     }
 
-    //dfs through point 0
+    //dfs through point 0 (could be any)
     //then checking visited array, if all were visited(1) then it is connected
     int visited[index+1];
     memset(visited, 0, sizeof(visited));
@@ -251,6 +237,7 @@ int is_it_connected(int flag, vector<pair<pair<int,int>,pair<int,int>>> edges){
     return 1;
 }
 
+//display edges as points connection through converting edges into a graph and printing it with dfs
 void show_vector_edges(vector<pair<pair<int,int>,pair<int,int>>> edges){
     is_it_connected(2, edges);
     cout << endl;
@@ -279,10 +266,13 @@ void two_exchange(int flag, vector<pair<pair<int,int>,pair<int,int>>> vector_edg
     for(int i=0; i<n; i++){
         for(int j=0; j<n; j++){
             if(vector_edges[i] != vector_edges[j]){
+                
+                //if edges are collinear and laying in opposite directions then we dont accept those intersections
                 if(collinear_opposite_direction_edges(vector_edges[i], vector_edges[j])){
                     continue;
                 }
-                //cout <<"BBB"<<endl;
+
+                //if edges intersect and specific intersection havent been seen already 
                 if(edges_intersect(vector_edges[i].first, vector_edges[i].second, vector_edges[j].first, vector_edges[j].second) &&
                 vi.find(make_pair(vector_edges[i], vector_edges[j])) == vi.end() && vi.find(make_pair(vector_edges[j], vector_edges[i])) == vi.end()){
                     //{A,B} {C,D} -> {A,C} {B,D} 
@@ -437,6 +427,7 @@ void two_exchange(int flag, vector<pair<pair<int,int>,pair<int,int>>> vector_edg
     return;
 }
 
+//simulated annealing acceptance probability function
 int P(int chosen_neighbour_intersections, int current_state_intersections, double T){
     int diff = chosen_neighbour_intersections - current_state_intersections;
     srand(time(0));

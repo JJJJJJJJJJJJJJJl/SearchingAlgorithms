@@ -39,11 +39,13 @@ Nearest Neighbour Solution: (-4,-7) (8,-7) (9,-9) (7,7) (1,9)
 (1,9) (9,-9) (-4,-7) (8,-7) (7,7)
 
 Hill Climbing (based on different heuristics):
-Best-Improvement First: (1,9) (7,7) (8,-7) (9,-9) (-4,-7)
+ - Best-Improvement First: (1,9) (7,7) (8,-7) (9,-9) (-4,-7)
 
-First-Improvement: (1,9) (-4,-7) (9,-9) (7,7) (8,-7)
+ - First-Improvement: (1,9) (-4,-7) (9,-9) (7,7) (8,-7)
 
-Less Edge Intersections: (1,9) (-4,-7) (9,-9) (7,7) (8,-7)
+ - Less Edge Intersections: (1,9) (-4,-7) (9,-9) (7,7) (8,-7)
 
-Random Neighbour: (1,9) (7,7) (8,-7) (9,-9) (-4,-7)
+ - Random Neighbour: (1,9) (7,7) (8,-7) (9,-9) (-4,-7)
+
+Simulated Annealing: (1,9) (-4,-7) (9,-9) (7,7) (8,-7)
 ```
