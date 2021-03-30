@@ -432,37 +432,37 @@ void two_exchange(int flag, vector<pair<pair<int,int>,pair<int,int>>> vector_edg
     return;
 }
 
-void hill_climbing(int flag, vector<pair<pair<int,int>,pair<int,int>>> vector_edges){
+void hill_climbing(int flag, vector<pair<pair<int,int>,pair<int,int>>> initial){
     srand(time(0));
     vector<vector<pair<pair<int,int>,pair<int,int>>>> temp; 
     vector<pair<pair<int,int>,pair<int,int>>> cur;
-    vector<pair<pair<int,int>,pair<int,int>>> last;
 
-    two_exchange(flag, vector_edges, temp);
-    if(flag == 1 || flag == 2 || flag == 3){
-        cur = temp[0];    
-    }
-    else{
-        cur = temp[(rand() % (((int)temp.size()-1) - 0 + 1)) + 0];
-    }
-    last = cur;
-
-    while(perimeter(cur) <= perimeter(last)){
-        temp.clear();
-        two_exchange(flag, cur, temp);
-        last = cur;
-        if((int) temp.size() > 0){
-            if(flag == 1 || flag == 2 || flag == 3){
-                cur = temp[0];
-            }
-            else{
-                cur = temp[(rand() % (((int)temp.size()-1) - 0 + 1)) + 0];
-            }
+    while(1){
+        //initial iteration
+        if(cur.size() == 0){
+            two_exchange(flag, initial, temp);
         }
+        //any other iteration 
         else{
+            two_exchange(flag, cur, temp);
+        }
+
+        //if there are no neighbours to choose from
+        if(temp.size() == 0){
             break;
         }
+
+        //how next candidate is chosen
+        if(flag == 1 || flag == 2 || flag == 3){
+            cur = temp[0];
+        }
+        else{
+            cur = temp[(rand() % (((int)temp.size()-1) + 1))];
+        }
+
+        temp.clear();
     }
+
     if(flag == 1){
         cout << " - Best-Improvement First: ";
         show_vector_edges(cur);
@@ -485,12 +485,21 @@ void hill_climbing(int flag, vector<pair<pair<int,int>,pair<int,int>>> vector_ed
 
 //simulated annealing acceptance probability function
 int P(int chosen_neighbour_energy, int current_state_energy, double T){
+    //energy difference
     int diff = chosen_neighbour_energy - current_state_energy;
+    
+    //pretty good seed
     srand(time(0));
-    double metropolis = (rand() / double(RAND_MAX)); 
-    if(diff < 0 || metropolis < exp(-diff / T)){
+
+    //random number within [0..1}
+    double random = (rand() / double(RAND_MAX));
+
+    //accepts candidate 
+    if(diff < 0 || random < exp(-diff / T)){
         return 1;
     }
+
+    //denies candidate
     return 0;
 }
 
@@ -507,47 +516,82 @@ void simulated_annealing(vector<pair<pair<int,int>,pair<int,int>>> initial){
     last = initial;
     best_sa_perimeter = perimeter(initial);
 
-    //constants
-    double T = 500;
-    double cooling_rate = 0.95;
-    int max_steps = 100;
+    /* NOTES:
 
+    - noticing that algorithm's always stopping at 121 step due to temperature,
+      lowering max_steps to something less than 121 makes it stops at that specific value,
+      not sure how things could be balanced 
+
+    - also noticing P function causing some floating point exception, not really sure why and how !!! 
+    */
+    
+    //arbitrary constants
+    double T = 1000;
+    double cooling_rate = 0.95;
+    int max_steps = 150;
     int cur_step = 0;
-    while(cur_step != max_steps && T > 0){
+
+    while(cur_step != max_steps && T > 2){
         cout << "step: " << cur_step << endl;
         new_candidates.clear();
-        if(cur_step != 0){
-            two_exchange(0, cur, new_candidates);
-        }
-        else{
+
+        //initial neighbours
+        //first algorithm iteration
+        if((int)cur.size() == 0 && cur_step == 0){
             two_exchange(0, initial, new_candidates);
         }
+
+        //middle time neighbours
+        //any other algorithm iteration goes here
+        else if((int)cur.size() > 0 && cur_step != 0){
+            two_exchange(0, cur, new_candidates);
+        }
+
+        //otherwise it means cur is empty and theres no candidates so algorithm stops
+        //cur.size() > 0 && cur_step == 0 will never happen
+
+        //adding new candidates to possible (current) candidates
         for(int i=0; i<(int)new_candidates.size(); i++){
             current_candidates.push_back(new_candidates[i]);
         }
+
         if((int) current_candidates.size() > 0){
-            int rand_index = (rand() % (((int)current_candidates.size()-1) + 1));
-            cur = current_candidates[rand_index];
-            int cur_energy = intersections(cur);
+            int rand_index;
             int last_energy = intersections(last);
-            //if you deny a candidate, should it be removed from possible candidates?
-            while(1/* !P(cur_energy, last_energy, T) */){
+
+            while(1){
                 rand_index = (rand() % (((int)current_candidates.size()-1) + 1));
                 cur = current_candidates[rand_index];
-                cur_energy = intersections(cur);
+                int cur_energy = intersections(cur);
+                
+                //candidate accepted
                 if(P(cur_energy, last_energy, T)){
+                    current_candidates.erase(current_candidates.begin() + rand_index);
                     break;
                 }
+                
+                //candidate denied
                 else{
-                    current_candidates.erase(current_candidates.begin() + rand_index);
+                    //removing denied candidate
+                    //if you deny a candidate, should it be removed from possible candidates???
+                    if((int)current_candidates.size() > 0){
+                        current_candidates.erase(current_candidates.begin() + rand_index);
+                    }
+                    //no more candidates to remove/choose from
+                    else{
+                        break;
+                    }
+                    cur.clear();
                 }
             }
+
+            //since we selecting from any candidate it has been found in any state neighbourhood
             int cur_perimeter = perimeter(cur);
             if(cur_perimeter < best_sa_perimeter){
                 best_sa_perimeter = cur_perimeter;
                 best_sa = cur;
             }
-            current_candidates.erase(current_candidates.begin() + rand_index);
+
             cur_step++;
             T *= cooling_rate;
             last = cur;
@@ -558,6 +602,7 @@ void simulated_annealing(vector<pair<pair<int,int>,pair<int,int>>> initial){
     }
     cout << "Simulated Annealing: ";
     show_vector_edges(best_sa);
+    return;
 }
 
 void permutation(vector<pair<int,int>> vector_points){
@@ -663,18 +708,19 @@ int main(){
     //generating edges
     vector<pair<pair<int,int>,pair<int,int>>> vector_edges;
     generate_edges(vector_points, vector_edges);
-    cout << "intersections: " << intersections(vector_edges) << endl;
+
     //generating neighbourhood by 2-exchange
     vector<vector<pair<pair<int,int>,pair<int,int>>>> two_exchange_neighbours;
     two_exchange(0, vector_edges, two_exchange_neighbours);
 
-    cout << "2-Exchange Neighbourhood:" << endl;
     //if theres no neighbours that means there were no intersections so we already reached the goal
     if((int)two_exchange_neighbours.size() == 0){
         cout << "Polygon already found. (as shown below)" << endl;
         show_vector_points(vector_points);
+        return 0;
     }
     else{
+        cout << "2-Exchange Neighbourhood:" << endl;
         //printing neighbourhood
         for(int i=0; i<(int)two_exchange_neighbours.size(); i++){
             show_vector_edges(two_exchange_neighbours[i]);
@@ -704,21 +750,3 @@ int main(){
 
     return 0;
 }
-
-
-//A B C D E F
-
-//Exchange case 1, AB CD -> AC BD 
-//[(1,1),(3,3)] [(3,3),(5,0)] [(5,0),(2,-1)] [(2,-1),(3,1)] [(3,1),(1,3)] [(1,3),(1,1)]
-//------------                                              -------------
-//[(1,1),(3,1)] [(3,3),(5,0)] [(5,0),(2,-1)] [(2,-1),(3,1)] [(3,3),(1,3)] [(1,3),(1,1)]
-//        **                                                  **
-//[(1,1),(3,1)] [(3,3),(5,0)] [(5,0),(2,-1)] [(2,-1),(3,1)] [(3,3),(1,3)] [(1,3),(1,1)]   
-//             [(2,-1),(3,1)] [(5,0),(2,-1)] [(3,3),(5,0)]
-//             [(3,1),(2,-1)] [(2,-1),(5,0)] [(5,0),(3,3)]
-//FINAL:
-//[(1,1),(3,1)] [(3,1),(2,-1)] [(2,-1),(5,0)] [(5,0),(3,3)] [(3,3),(1,3)] [(1,3),(1,1)]
-
-
-//Exchange case 2, AB CD -> AD CB
-//No test cases found, unknown...404
