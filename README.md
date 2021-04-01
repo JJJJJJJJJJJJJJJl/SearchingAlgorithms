@@ -5,7 +5,7 @@ Given a sequence of 2D points the goal is to find a simple polygon.<br/>
 Featuring some algorithms, as listed:<br/>
 		- Permutation<br/>
 		- Nearest Neighbour<br/>
-		- Hill Climging through different heuristics (2-opt neighbourhood)<br/>
+		- Hill Climbing through different heuristics (2-opt neighbourhood)<br/>
 		- Simulated Annealing (2-opt neighbourhood)<br/>
 		- Ant Colony Optimization<br/>
 
