@@ -69,6 +69,26 @@ int edges_intersect(pair<int,int> p1, pair<int,int> p2, pair<int,int> p3, pair<i
     return 0;
 }
 
+//efficient alternative to pow() props:https://stackoverflow.com/questions/26860574/pow-implementation-in-cmath-and-efficient-replacement
+double powerd (double x, int y){
+    double temp;
+    if (y == 0){
+        return 1;
+    }
+    temp = powerd(x, y / 2);
+    if((y % 2) == 0){
+        return temp * temp;
+    }
+    else{
+        if(y > 0){
+            return x * temp * temp;
+        }
+        else{
+            return (temp * temp) / x;
+        }
+    }
+}
+
 //not the perimeter exactly since euclidean distance doesn't square root the squares sum so it avoids floating point approximations
 int perimeter(vector<pair<pair<int,int>,pair<int,int>>> edges){
     int ans = 0;
@@ -513,6 +533,8 @@ void simulated_annealing(vector<pair<pair<int,int>,pair<int,int>>> initial){
     int best_sa_perimeter;
 
     last = initial;
+
+    //best measure found
     best_sa_perimeter = perimeter(initial);
 
     /* NOTES:
@@ -531,9 +553,13 @@ void simulated_annealing(vector<pair<pair<int,int>,pair<int,int>>> initial){
     */
     
     //arbitrary constants
+    //temperature
     double T = 1000;
+    //temperature cooling rate
     double cooling_rate = 0.95;
+    //maximum number of iterations
     int max_steps = 150;
+    //current iteration step
     int cur_step = 0;
 
     while(cur_step != max_steps && T > 2){
@@ -658,16 +684,20 @@ void ant_colony(vector<pair<int,int>> points, set<pair<int,int>> set_points){
     //edge pheromone
     map<pair<pair<int,int>,pair<int,int>>,double> edge_pheromone;
 
+    //best measures found
     int best_perimeter =INT_MAX;
     vector<pair<int,int>> best_ant_path;
 
-
+    //arbitrary contants
+    //maximum number of iterations
     int max_iters = 100;
+    //how much found paths influences probability
     int Q = 1;
-    /* TO BE ADDED
-    int alpha = ;
-    int beta = ; */
-    //evaporation rate
+    //how much edge pheromone influences probability
+    int alpha = 5;
+    //how much edge distance influences probability
+    int beta = 1;
+    //pheromone evaporation rate
     double p = 0.85;
 
     //generating all possible edges
@@ -713,10 +743,10 @@ void ant_colony(vector<pair<int,int>> points, set<pair<int,int>> set_points){
                     //calculating each edge odd
                     map<pair<int,int>, double> odd;
                     for(pair<int,int> p_i : help_set_points){
-                        double numerator = edge_pheromone[make_pair(cur_point, p_i)] * euclidean_distance(cur_point, p_i);
+                        double numerator = powerd(edge_pheromone[make_pair(cur_point, p_i)], alpha) * powerd(euclidean_distance(cur_point, p_i), beta);
                         double denominator = 0; 
                         for(pair<int,int> p_j : help_set_points){
-                            denominator += edge_pheromone[make_pair(cur_point, p_j)] * euclidean_distance(cur_point, p_j);
+                            denominator += powerd(edge_pheromone[make_pair(cur_point, p_j)], alpha) * powerd(euclidean_distance(cur_point, p_j), beta);
                         }   
                         odd[p_i] = numerator / denominator;
                     }
