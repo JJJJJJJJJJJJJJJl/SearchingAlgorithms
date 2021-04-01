@@ -1,7 +1,13 @@
 # SearchingAlgorithms
 
 **Goal**<br/>
-Given a sequence of 2D points forming a polygon, it aims to find the minimal cost [hamilton cycle](https://en.wikipedia.org/wiki/Hamiltonian_path).<br/> 
+Given a sequence of 2D points the goal is to find a simple polygon.<br/> 
+Featuring some algorithms, as listed:<br/>
+	- Permutation<br/>
+	- Nearest Neighbour<br/>
+	- Hill Climging through differente heuristics (2-opt neighbourhood)<br/>
+	- Simulated Annealing (2-opt neighbourhood)<br/>
+	- Ant Colony Optimization<br/>
 
 **Compile**<br/>
 ```
@@ -48,4 +54,6 @@ Hill Climbing (based on different heuristics):
  - Random Neighbour: (1,9) (7,7) (8,-7) (9,-9) (-4,-7)
 
 Simulated Annealing: (1,9) (-4,-7) (9,-9) (7,7) (8,-7)
+
+Ant Colony Optimization: (1,9) (7,7) (-4,-7) (9,-9) (8,-7)
 ```

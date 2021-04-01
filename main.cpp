@@ -606,6 +606,7 @@ void simulated_annealing(vector<pair<pair<int,int>,pair<int,int>>> initial){
     }
     cout << "Simulated Annealing: ";
     show_vector_edges(best_sa);
+    cout << endl;
     return;
 }
 
@@ -661,8 +662,11 @@ void ant_colony(vector<pair<int,int>> points, set<pair<int,int>> set_points){
     vector<pair<int,int>> best_ant_path;
 
 
-    int max_iters = 500;
+    int max_iters = 100;
     int Q = 1;
+    /* TO BE ADDED
+    int alpha = ;
+    int beta = ; */
     //evaporation rate
     double p = 0.85;
 
@@ -686,7 +690,7 @@ void ant_colony(vector<pair<int,int>> points, set<pair<int,int>> set_points){
     }
     visited_edges.clear();
 
-    int ants = 10;
+    int ants = 100;
     vector<pair<int,int>> ant_path[ants];
 
     while(max_iters != 0){
@@ -738,14 +742,12 @@ void ant_colony(vector<pair<int,int>> points, set<pair<int,int>> set_points){
                     }
                     cumulative_sum.push_back((double) 0);
                     double rand_num = (rand() / double(RAND_MAX));
-                    //cout << "AI: ";
                     for(int j=0; j<(int)cumulative_sum.size()-1; j++){
-                        //cout << cumulative_sum[i] << " ";
                         //next node chosen
                         //the difference between each if is on the '>='
                         //rand_num can be 0.00 so we check as >= in the last 2 numbers
                         //example: [1.00, 0.24, 0.05, 0.00]
-                        //                          ** rand num <= 0.05 && rand_num >= 0
+                        //                             ** rand num <= 0.05 && rand_num >= 0
                         if(j < (int)cumulative_sum.size()-2){
                             if(rand_num <= cumulative_sum[j] && rand_num > cumulative_sum[j+1]){
                                 ant_path[i].push_back(index_point[j]);
@@ -812,7 +814,7 @@ void ant_colony(vector<pair<int,int>> points, set<pair<int,int>> set_points){
 
         max_iters--;
     }
-
+    cout << "Ant Colony Optimization: ";
     show_vector_points(best_ant_path);
     return;
 }
