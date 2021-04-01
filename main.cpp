@@ -252,9 +252,9 @@ void show_vector_edges(vector<pair<pair<int,int>,pair<int,int>>> edges){
 }
 
 //flag == 0 -> Generates all legit neighbours.
-//flag == 1 -> Generates all legit neighbours but only returns the one with lowest perimeter ("best-improvement first").
-//flag == 2 -> Generates all legit neighbours but only returns the first it finds thats better than the current state ("first-improvement").
-//flag == 3 -> Generates all legit neighbours but only returns the one with less edge intersections.
+//flag == 1 -> Returns state with lowest perimeter ("best-improvement first").
+//flag == 2 -> Returns the first state it finds with lower perimeter than the current state ("first-improvement").
+//flag == 3 -> Returns state with less edge intersections.
 void two_exchange(int flag, vector<pair<pair<int,int>,pair<int,int>>> vector_edges, vector<vector<pair<pair<int,int>,pair<int,int>>>> &neighbourhood){
     int current_state_perimeter = perimeter(vector_edges);
     int lowest_perimeter = INT_MAX;//flag == 1 purposes, assuming perimeters wont go beyond INT_MAX (2147483647)
@@ -413,7 +413,6 @@ void two_exchange(int flag, vector<pair<pair<int,int>,pair<int,int>>> vector_edg
                     vector_edges[i].second = vector_edges[j].second;
                     vector_edges[j].second = temp;
 
-                    //first legit neighbour was found
                     if(flag == 2){
                         if((int) neighbourhood.size() > 0 && perimeter(neighbourhood[0]) < current_state_perimeter){
                             return;
@@ -488,7 +487,7 @@ int P(int chosen_neighbour_energy, int current_state_energy, double T){
     //energy difference
     int diff = chosen_neighbour_energy - current_state_energy;
     
-    //pretty good seed
+    //pretty good seed, even though 'random' number is the same during a time second
     srand(time(0));
 
     //random number within [0..1}
@@ -522,7 +521,13 @@ void simulated_annealing(vector<pair<pair<int,int>,pair<int,int>>> initial){
       lowering max_steps to something less than 121 makes it stops at that specific value,
       not sure how things could be balanced 
 
-    - also noticing P function causing some floating point exception, not really sure why and how !!! 
+    - also noticing P function causing some floating point exception, not really sure why and how (!!!) 
+
+    QUESTIONS:
+
+    - should we search the next candidate from all the neighbours that have been found but not P-tested,
+        or should the neighbourhood the restricted to the state neighbours only???????????
+    - should a denied candidate be removed from possible candidates??????????
     */
     
     //arbitrary constants
@@ -532,7 +537,6 @@ void simulated_annealing(vector<pair<pair<int,int>,pair<int,int>>> initial){
     int cur_step = 0;
 
     while(cur_step != max_steps && T > 2){
-        cout << "step: " << cur_step << endl;
         new_candidates.clear();
 
         //initial neighbours
@@ -643,19 +647,173 @@ void nearest_neighbour(int n, set<pair<int,int>> set_points){
     return;
 }
 
-void ant_colony(vector<pair<int,int>> points){
+//ant colony optimization
+void ant_colony(vector<pair<int,int>> points, set<pair<int,int>> set_points){
     int n = (int) points.size();
-    map<pair<pair<int,int>,pair<int,int>>,int> edges;
+
+    vector<pair<pair<int,int>,pair<int,int>>> edges;
+    set<pair<pair<int,int>,pair<int,int>>> visited_edges;
+
+    //edge pheromone
+    map<pair<pair<int,int>,pair<int,int>>,double> edge_pheromone;
+
+    int best_perimeter =INT_MAX;
+    vector<pair<int,int>> best_ant_path;
+
+
+    int max_iters = 500;
+    int Q = 1;
+    //evaporation rate
+    double p = 0.85;
+
+    //generating all possible edges
     for(int i=0; i<n; i++){
         for(int j=0; j<n; j++){
             if(i != j){
-                edges[make_pair(points[i], points[j])] = 0;
+                pair<pair<int,int>,pair<int,int>> new_edge = make_pair(points[i], points[j]);
+                pair<pair<int,int>,pair<int,int>> new_edge_reversed = make_pair(points[j], points[i]);
+                if(visited_edges.find(new_edge) == visited_edges.end() && visited_edges.find(new_edge_reversed) == visited_edges.end()){
+                   edges.push_back(new_edge);
+                   visited_edges.insert(new_edge);
+                   visited_edges.insert(new_edge_reversed); 
+
+                   //setting inital pheronome as 1
+                   edge_pheromone[new_edge] = 1;
+                   edge_pheromone[new_edge_reversed] = 1;
+                }
             }
         }
     }
+    visited_edges.clear();
 
-    //int ants = 10;
+    int ants = 10;
+    vector<pair<int,int>> ant_path[ants];
 
+    while(max_iters != 0){
+        srand(time(0));
+        //randomly choosing initial point
+        pair<int,int> initial = points[(rand() % ((n-1) + 1))];
+
+        //generating each ant path
+        for(int i=0; i<ants; i++){
+            ant_path[i].push_back(initial);
+            set<pair<int,int>> help_set_points = set_points;
+            help_set_points.erase(help_set_points.find(initial));
+            while((int)ant_path[i].size() != n){
+                pair<int,int> cur_point = ant_path[i][(int)ant_path[i].size()-1];
+                if(help_set_points.size() == 1){
+                    ant_path[i].push_back(* help_set_points.begin());
+                    help_set_points.erase(help_set_points.begin());
+                }
+                else{
+                    //calculating each edge odd
+                    map<pair<int,int>, double> odd;
+                    for(pair<int,int> p_i : help_set_points){
+                        double numerator = edge_pheromone[make_pair(cur_point, p_i)] * euclidean_distance(cur_point, p_i);
+                        double denominator = 0; 
+                        for(pair<int,int> p_j : help_set_points){
+                            denominator += edge_pheromone[make_pair(cur_point, p_j)] * euclidean_distance(cur_point, p_j);
+                        }   
+                        odd[p_i] = numerator / denominator;
+                    }
+
+                    //choosing next node based on calculated probability
+                    vector<double> odds;
+                    map<int,pair<int,int>> index_point;
+                    int in = 0;
+                    for(auto i : odd){
+                        odds.push_back(i.second);
+                        index_point[in++] = i.first;
+                    }
+                    vector<double> cumulative_sum;
+                    for(int j=0; j<(int)odds.size(); j++){
+                        double cur_sum = odds[j];
+                        for(int k=j+1; k<(int)odds.size(); k++){
+                            if(k >= (int)odds.size()){
+                                break;
+                            }
+                            cur_sum += odds[k];
+                        }
+                        cumulative_sum.push_back(cur_sum);
+                    }
+                    cumulative_sum.push_back((double) 0);
+                    double rand_num = (rand() / double(RAND_MAX));
+                    //cout << "AI: ";
+                    for(int j=0; j<(int)cumulative_sum.size()-1; j++){
+                        //cout << cumulative_sum[i] << " ";
+                        //next node chosen
+                        //the difference between each if is on the '>='
+                        //rand_num can be 0.00 so we check as >= in the last 2 numbers
+                        //example: [1.00, 0.24, 0.05, 0.00]
+                        //                          ** rand num <= 0.05 && rand_num >= 0
+                        if(j < (int)cumulative_sum.size()-2){
+                            if(rand_num <= cumulative_sum[j] && rand_num > cumulative_sum[j+1]){
+                                ant_path[i].push_back(index_point[j]);
+                                help_set_points.erase(help_set_points.find(index_point[j]));
+                                break;
+                            }
+                        }
+                        else{
+                            if(rand_num <= cumulative_sum[j] && rand_num >= cumulative_sum[j+1]){
+                                ant_path[i].push_back(index_point[j]);
+                                help_set_points.erase(help_set_points.find(index_point[j]));
+                                break;
+                            } 
+                        }   
+                    }
+                }
+            }
+            /* //just in case
+            help_set_points.clear(); */
+        }
+        //update pheromone on each edge
+        map<pair<pair<int,int>,pair<int,int>>, double> path_costs_inverse_sum;
+        for(int i=0; i<ants; i++){
+            vector<pair<pair<int,int>,pair<int,int>>> ant_path_edges;
+            generate_edges(ant_path[i], ant_path_edges);
+            int ant_path_perimeter = perimeter(ant_path_edges);
+
+            //checking for better solutions (this is done here to use the already calculated perimeters)
+            if(ant_path_perimeter < best_perimeter){
+                best_perimeter = ant_path_perimeter;
+                best_ant_path = ant_path[i];
+            }
+
+            for(int j=0; j<(int)ant_path_edges.size(); j++){
+                //one edge direction
+                if(path_costs_inverse_sum.find(ant_path_edges[j]) == path_costs_inverse_sum.end()){
+                    path_costs_inverse_sum[ant_path_edges[j]] = Q/ant_path_perimeter;
+                }
+                else{
+                    path_costs_inverse_sum[ant_path_edges[j]] += Q/ant_path_perimeter;
+                }
+                //other edge direction
+                pair<pair<int,int>,pair<int,int>> reversed_edge = make_pair(ant_path_edges[j].second,ant_path_edges[j].first);
+                if(path_costs_inverse_sum.find(reversed_edge) == path_costs_inverse_sum.end()){
+                    path_costs_inverse_sum[reversed_edge] = Q/ant_path_perimeter;
+                }
+                else{
+                    path_costs_inverse_sum[reversed_edge] += Q/ant_path_perimeter;
+                }
+            }
+        }
+        //adding evaporation rate
+        for(auto edge : path_costs_inverse_sum){
+            edge.second += p * edge_pheromone[edge.first];
+            
+            //actually updating edge pheromome
+            edge_pheromone[edge.first] = edge.second;
+        }
+        
+        //resetting ant paths data structure
+        for(int i=0; i<ants; i++){
+            ant_path[i].clear();
+        }
+
+        max_iters--;
+    }
+
+    show_vector_points(best_ant_path);
     return;
 }
 
@@ -746,7 +904,7 @@ int main(){
     simulated_annealing(vector_edges);
 
     //6 - Ant Colony Optimization Metaheuristic
-    ant_colony(vector_points);
+    ant_colony(vector_points, set_points);
 
     return 0;
 }
