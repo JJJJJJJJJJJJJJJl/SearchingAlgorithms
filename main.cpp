@@ -699,6 +699,14 @@ void ant_colony(vector<pair<int,int>> points, set<pair<int,int>> set_points){
     //pheromone evaporation rate
     double p = 0.85;
 
+    /*
+    NOTES:
+
+        - should the algorithm stops once it find the first simple polygon even though
+            it might not be the best possible one (lowest perimeter)????????
+            stopping definitely decreases time spent but optimal solution might not be returned..hmm dont know what to do 
+     */
+
     //generating all possible edges
     for(int i=0; i<n; i++){
         for(int j=0; j<n; j++){
@@ -722,8 +730,7 @@ void ant_colony(vector<pair<int,int>> points, set<pair<int,int>> set_points){
     int ants = 100;
     vector<pair<int,int>> ant_path[ants];
 
-    while(max_iters != 0){
-        cout << ":/\n" << endl;
+    while(max_iters > 0){
         srand(time(0));
         //randomly choosing initial point
         pair<int,int> initial = points[(rand() % ((n-1) + 1))];
@@ -809,6 +816,12 @@ void ant_colony(vector<pair<int,int>> points, set<pair<int,int>> set_points){
             if(ant_path_perimeter < best_perimeter){
                 best_perimeter = ant_path_perimeter;
                 best_ant_path = ant_path[i];
+                
+                //this is totally optional altough it decreases max time spent but possibly giving up optimal solution 
+                if(intersections(ant_path_edges) == 0){
+                    max_iters = 0;
+                    break;
+                }
             }
 
             for(int j=0; j<(int)ant_path_edges.size(); j++){
