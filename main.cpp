@@ -110,31 +110,6 @@ void generate_edges(vector<pair<int,int>> points, vector<pair<pair<int,int>,pair
     return;
 }
 
-/* //is it a simple polygon??
-int simple_polygon(vector<pair<pair<int,int>,pair<int,int>>> edges){
-    map<pair<int,int>,int> degrees;
-    for(int i=0; i<(int)edges.size(); i++){
-        if(degrees.find(edges[i].first) == degrees.end()){
-            degrees[edges[i].first] = 1;
-        }
-        else degrees[edges[i].first]++;
-
-        if(degrees.find(edges[i].second) == degrees.end()){
-            degrees[edges[i].second] = 1;
-        }
-        else degrees[edges[i].second]++;
-    }
-    for(auto p : degrees){
-        if(p.second != 2){
-            return 0;
-        }
-    }
-    if(intersections(edges) != 0){
-        return 0;
-    }
-    return 1;
-} */
-
 //scalar product of two segments
 int scalar_product(pair<pair<int,int>,pair<int,int>> a, pair<pair<int,int>,pair<int,int>> b){
     pair<int,int> a_vector = make_pair(a.second.first - a.first.first, a.second.second - a.first.second);
