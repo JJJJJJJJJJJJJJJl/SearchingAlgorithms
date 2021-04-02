@@ -547,7 +547,7 @@ void simulated_annealing(vector<pair<pair<int,int>,pair<int,int>>> initial){
     QUESTIONS:
 
     - should we search the next candidate from all the neighbours that have been found but not P-tested,
-        or should the neighbourhood the restricted to the state neighbours only???????????
+        or should the neighbourhood be restricted to the state neighbours only???????????
     - should a denied candidate be removed from possible candidates??????????
     */
     
