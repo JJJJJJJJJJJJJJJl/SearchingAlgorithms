@@ -517,7 +517,6 @@ int P(int chosen_neighbour_energy, int current_state_energy, double T){
     if(diff < 0 || random < exp(-diff / T)){
         return 1;
     }
-
     //denies candidate
     return 0;
 }
@@ -543,7 +542,7 @@ void simulated_annealing(vector<pair<pair<int,int>,pair<int,int>>> initial){
       lowering max_steps to something less than 121 makes it stops at that specific value,
       not sure how things could be balanced 
 
-    - also noticing P function causing some floating point exception, not really sure why and how (!!!) 
+    - also noticing P function causing some floating point exceptions, not really sure why and how (!!!) 
 
     QUESTIONS:
 
@@ -724,6 +723,7 @@ void ant_colony(vector<pair<int,int>> points, set<pair<int,int>> set_points){
     vector<pair<int,int>> ant_path[ants];
 
     while(max_iters != 0){
+        cout << ":/\n" << endl;
         srand(time(0));
         //randomly choosing initial point
         pair<int,int> initial = points[(rand() % ((n-1) + 1))];
@@ -743,10 +743,10 @@ void ant_colony(vector<pair<int,int>> points, set<pair<int,int>> set_points){
                     //calculating each edge odd
                     map<pair<int,int>, double> odd;
                     for(pair<int,int> p_i : help_set_points){
-                        double numerator = powerd(edge_pheromone[make_pair(cur_point, p_i)], alpha) * powerd(euclidean_distance(cur_point, p_i), beta);
+                        double numerator = powerd(edge_pheromone[make_pair(cur_point, p_i)], alpha) * powerd((double) 1/euclidean_distance(cur_point, p_i), beta);
                         double denominator = 0; 
                         for(pair<int,int> p_j : help_set_points){
-                            denominator += powerd(edge_pheromone[make_pair(cur_point, p_j)], alpha) * powerd(euclidean_distance(cur_point, p_j), beta);
+                            denominator += powerd(edge_pheromone[make_pair(cur_point, p_j)], alpha) * powerd((double) 1/euclidean_distance(cur_point, p_j), beta);
                         }   
                         odd[p_i] = numerator / denominator;
                     }
