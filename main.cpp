@@ -422,7 +422,6 @@ void two_exchange(int flag, vector<pair<pair<int,int>,pair<int,int>>> vector_edg
 }
 
 void hill_climbing(int flag, vector<pair<pair<int,int>,pair<int,int>>> initial){
-    srand(time(0));
     vector<vector<pair<pair<int,int>,pair<int,int>>>> temp; 
     vector<pair<pair<int,int>,pair<int,int>>> cur;
 
@@ -476,9 +475,6 @@ void hill_climbing(int flag, vector<pair<pair<int,int>,pair<int,int>>> initial){
 int P(int chosen_neighbour_energy, int current_state_energy, double T){
     //energy difference
     int diff = chosen_neighbour_energy - current_state_energy;
-    
-    //pretty good seed, even though 'random' number is the same during a time second
-    srand(time(0));
 
     //random number within [0..1}
     double random = (rand() / double(RAND_MAX));
@@ -493,7 +489,6 @@ int P(int chosen_neighbour_energy, int current_state_energy, double T){
 
 //energy meaning number of intersections
 void simulated_annealing(vector<pair<pair<int,int>,pair<int,int>>> initial){
-    srand(time(0));
     vector<vector<pair<pair<int,int>,pair<int,int>>>> current_candidates;
     vector<vector<pair<pair<int,int>,pair<int,int>>>> new_candidates;
     vector<pair<pair<int,int>,pair<int,int>>> cur;
@@ -701,7 +696,6 @@ void ant_colony(vector<pair<int,int>> points, set<pair<int,int>> set_points){
     vector<pair<int,int>> ant_path[ants];
 
     while(max_iters > 0){
-        srand(time(0));
         //randomly choosing initial point
         pair<int,int> initial = points[(rand() % ((n-1) + 1))];
 
@@ -833,6 +827,8 @@ void ant_colony(vector<pair<int,int>> points, set<pair<int,int>> set_points){
 }
 
 int main(){
+    //setting seed based on system time
+    srand(time(0));
 
     //input 
     int flag, n;
@@ -857,7 +853,6 @@ int main(){
         //1 - generating n points in range[-m..m] @@@@@@@@@@@@@
         int m;
         cin >> m;
-        srand(time(0));
         for(int i=0; i<n; i++){
             pair<int,int> p = make_pair((rand() % (m - (-m) + 1)) + (-m), (rand() % (m - (-m) + 1)) + (-m));
             while(set_points.find(p) != set_points.end()){
