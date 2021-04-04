@@ -600,7 +600,7 @@ void simulated_annealing(vector<pair<pair<int,int>,pair<int,int>>> initial){
 void permutation(vector<pair<int,int>> vector_points){
     vector<pair<int,int>> permutation = vector_points;
     next_permutation(permutation.begin(), permutation.end());
-    cout << "Permutation Solution: ";
+    cout << "Permutation: ";
     show_vector_points(permutation);
     cout << endl;
     return;
@@ -629,7 +629,7 @@ void nearest_neighbour(int n, set<pair<int,int>> set_points){
         help.erase(help.find(closest_to_cur));
         nnf_ans.push_back(closest_to_cur);
     }
-    cout << "Nearest Neighbour Solution: ";
+    cout << "Nearest Neighbour: ";
     show_vector_points(nnf_ans);
     cout << endl;
     return;
