@@ -89,7 +89,7 @@ double powerd (double x, int y){
     }
 }
 
-//not the perimeter exactly since euclidean distance doesn't square root the squares sum so it avoids floating point approximations
+//not the perimeter exactly since we calculating euclidean distance without square root the squares sum to avoid floating point approximations
 int perimeter(vector<pair<pair<int,int>,pair<int,int>>> edges){
     int ans = 0;
     for(int i=0; i<(int)edges.size(); i++){
@@ -251,9 +251,8 @@ void show_vector_edges(vector<pair<pair<int,int>,pair<int,int>>> edges){
 //flag == 2 -> Returns the first state it finds with lower perimeter than the current state ("first-improvement").
 //flag == 3 -> Returns state with less edge intersections.
 void two_exchange(int flag, vector<pair<pair<int,int>,pair<int,int>>> vector_edges, vector<vector<pair<pair<int,int>,pair<int,int>>>> &neighbourhood){
-    int current_state_perimeter = perimeter(vector_edges);
-    int lowest_perimeter = INT_MAX;//flag == 1 purposes, assuming perimeters wont go beyond INT_MAX (2147483647)
-    int lowest_intersections = INT_MAX;//flag == 3 purposes, also assuming intersections wont go beyond INT_MAX (2147483647)
+    int lowest_perimeter = perimeter(vector_edges);;//flag == 1/2 purposes
+    int lowest_intersections = intersections(vector_edges);//flag == 3 purposes
     int n = (int) vector_edges.size();
     set<pair<pair<pair<int,int>,pair<int,int>>,pair<pair<int,int>,pair<int,int>>>> vi;//visited intersections
     set<pair<pair<int,int>,pair<int,int>>> set_edges;//edges of original disposition (finding purposes)
@@ -275,12 +274,16 @@ void two_exchange(int flag, vector<pair<pair<int,int>,pair<int,int>>> vector_edg
                     && !collinear_opposite_direction_edges(vector_edges[i], vector_edges[j])
                     && vi.find(make_pair(vector_edges[i], vector_edges[j])) == vi.end() 
                     && vi.find(make_pair(vector_edges[j], vector_edges[i])) == vi.end()){
+
                     //{A,B} {C,D} -> {A,C} {B,D} 
                     pair<int,int> temp = vector_edges[i].second;
                     vector_edges[i].second = vector_edges[j].first;
                     vector_edges[j].first = temp;
+
+                    //reversing within path purposes
                     int left = -1;
                     int right = -1;
+
                     //if new edges dont already exist
                     if(set_edges.find(vector_edges[i]) == set_edges.end() 
                     && set_edges.find(make_pair(vector_edges[i].second, vector_edges[i].first)) == set_edges.end()
@@ -324,25 +327,7 @@ void two_exchange(int flag, vector<pair<pair<int,int>,pair<int,int>>> vector_edg
                             right = right_to_reverse;
                         }
 
-                        int cur_perimeter;//flag == 1 purposes
-                        int cur_intersections;//flag == 3 purposes
-                        if(flag == 1){
-                            cur_perimeter = perimeter(vector_edges);
-                            if(cur_perimeter < lowest_perimeter){
-                                neighbourhood.clear();
-                                neighbourhood.push_back(vector_edges);
-                                lowest_perimeter = cur_perimeter;
-                            }
-                        }
-                        else if(flag == 3){
-                            cur_intersections = intersections(vector_edges);
-                            if(cur_intersections < lowest_intersections){
-                                neighbourhood.clear();
-                                neighbourhood.push_back(vector_edges);
-                                lowest_intersections = cur_intersections;
-                            }
-                        }
-                        else neighbourhood.push_back(vector_edges);
+                        neighbourhood.push_back(vector_edges);
                     }
                     //reseting to original disposition
                     temp = vector_edges[i].second;
@@ -371,49 +356,59 @@ void two_exchange(int flag, vector<pair<pair<int,int>,pair<int,int>>> vector_edg
                     }
 
                     //{A,B} {C,D} -> {A,D} {C,B}
-                    //not so sure how this case should be reversed, couldnt find a single test case where
-                    //this one didnt disconnect the path, so here's probably a bug. 
-
                     temp = vector_edges[i].second;
                     vector_edges[i].second = vector_edges[j].second;
                     vector_edges[j].second = temp;
+
+                    //not so sure how this case should be reversed, couldnt find a single test case where
+                    //this one didnt disconnect the path, so here's probably a bug. 
+
                     //if new edges dont already exist
                     if(set_edges.find(vector_edges[i]) == set_edges.end() 
                     && set_edges.find(make_pair(vector_edges[i].second, vector_edges[i].first)) == set_edges.end()
                     && set_edges.find(vector_edges[j]) == set_edges.end()
                     && set_edges.find(make_pair(vector_edges[j].second, vector_edges[j].first)) == set_edges.end()
                     && is_it_connected(1, vector_edges)){
-                        int cur_perimeter;//flag == 1 purposes
-                        int cur_intersections;//flag == 3 purposes
-                        if(flag == 1){
-                            cur_perimeter = perimeter(vector_edges);
-                            if(cur_perimeter < lowest_perimeter){
-                                neighbourhood.clear();
-                                neighbourhood.push_back(vector_edges);
-                                lowest_perimeter = cur_perimeter;
-                            }
-                        }
-                        else if(flag == 3){
-                            cur_intersections = intersections(vector_edges);
-                            if(cur_intersections < lowest_intersections){
-                                neighbourhood.clear();
-                                neighbourhood.push_back(vector_edges);
-                                lowest_intersections = cur_intersections;
-                            }
-                        }
-                        else neighbourhood.push_back(vector_edges);
+
+                        neighbourhood.push_back(vector_edges);
                     }
                     //reseting to original disposition
                     temp = vector_edges[i].second;
                     vector_edges[i].second = vector_edges[j].second;
                     vector_edges[j].second = temp;
 
+                    if(flag == 1){
+                        int cur_perimeter = perimeter(neighbourhood[(int)neighbourhood.size()-1]);
+                        if(cur_perimeter < lowest_perimeter){
+                            if((int)neighbourhood.size() > 1){
+                                neighbourhood.erase(neighbourhood.begin());
+                            }
+                            lowest_perimeter = cur_perimeter;
+                        }
+                        else{
+                            neighbourhood.erase(neighbourhood.begin() + (int)neighbourhood.size()-1);
+                        }
+                    }
+
                     if(flag == 2){
-                        if((int) neighbourhood.size() > 0 && perimeter(neighbourhood[0]) < current_state_perimeter){
+                        if((int) neighbourhood.size() > 0 && perimeter(neighbourhood[0]) < lowest_perimeter){
                             return;
                         }
                         else{
                             neighbourhood.clear();
+                        }
+                    }
+
+                    if(flag == 3){
+                        int cur_intersections = intersections(neighbourhood[(int)neighbourhood.size()-1]);
+                        if(cur_intersections < lowest_intersections){
+                            if((int)neighbourhood.size() > 1){
+                                neighbourhood.erase(neighbourhood.begin());
+                            }
+                            lowest_intersections = cur_intersections;
+                        }
+                        else{
+                            neighbourhood.erase(neighbourhood.begin() + (int)neighbourhood.size()-1);
                         }
                     }
 
