@@ -667,7 +667,7 @@ void ant_colony(vector<pair<int,int>> points, set<pair<int,int>> set_points){
     /*
     NOTES:
 
-        - should the algorithm stops once it finds the first simple polygon???????
+        - should the algorithm stop once it finds the first simple polygon???????
             stopping definitely decreases time spent but optimal solution might not be returned..hmm dont know what to do 
      */
 
