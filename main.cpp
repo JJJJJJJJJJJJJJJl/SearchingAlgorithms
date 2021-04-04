@@ -652,7 +652,7 @@ void ant_colony(vector<pair<int,int>> points, set<pair<int,int>> set_points){
     int best_perimeter =INT_MAX;
     vector<pair<int,int>> best_ant_path;
 
-    //arbitrary contants
+    //arbitrary constants
     //maximum number of iterations
     int max_iters = 100;
     //how much found paths influences probability
