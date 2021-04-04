@@ -667,8 +667,7 @@ void ant_colony(vector<pair<int,int>> points, set<pair<int,int>> set_points){
     /*
     NOTES:
 
-        - should the algorithm stops once it find the first simple polygon even though
-            it might not be the best possible one (lowest perimeter)????????
+        - should the algorithm stops once it finds the first simple polygon???????
             stopping definitely decreases time spent but optimal solution might not be returned..hmm dont know what to do 
      */
 
@@ -805,7 +804,7 @@ void ant_colony(vector<pair<int,int>> points, set<pair<int,int>> set_points){
                 }
             }
         }
-        
+
         //adding evaporation rate
         for(auto edge : path_costs_inverse_sum){
             edge.second += p * edge_pheromone[edge.first];
