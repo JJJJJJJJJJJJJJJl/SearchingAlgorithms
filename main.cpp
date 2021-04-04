@@ -541,9 +541,6 @@ void simulated_annealing(vector<pair<pair<int,int>,pair<int,int>>> initial){
             two_exchange(0, cur, new_candidates);
         }
 
-        //otherwise it means cur is empty and theres no candidates so algorithm stops
-        //cur.size() > 0 && cur_step == 0 will never happen
-
         //adding new candidates to possible (current) candidates
         for(int i=0; i<(int)new_candidates.size(); i++){
             current_candidates.push_back(new_candidates[i]);
