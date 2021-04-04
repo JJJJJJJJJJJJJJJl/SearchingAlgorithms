@@ -666,7 +666,7 @@ void ant_colony(vector<pair<int,int>> points, set<pair<int,int>> set_points){
 
         - should the algorithm stop once it finds the first simple polygon???????
             stopping definitely decreases time spent but optimal solution might not be returned..hmm dont know what to do 
-     */
+    */
 
     //generating all possible edges
     for(int i=0; i<n; i++){
@@ -765,7 +765,7 @@ void ant_colony(vector<pair<int,int>> points, set<pair<int,int>> set_points){
         }
 
         //update pheromone on each edge
-        map<pair<pair<int,int>,pair<int,int>>, double> path_costs_inverse_sum;
+        map<pair<pair<int,int>,pair<int,int>>, double> edge_pheromone_update;
         for(int i=0; i<ants; i++){
             vector<pair<pair<int,int>,pair<int,int>>> ant_path_edges;
             generate_edges(ant_path[i], ant_path_edges);
@@ -785,25 +785,25 @@ void ant_colony(vector<pair<int,int>> points, set<pair<int,int>> set_points){
 
             for(int j=0; j<(int)ant_path_edges.size(); j++){
                 //one edge direction
-                if(path_costs_inverse_sum.find(ant_path_edges[j]) == path_costs_inverse_sum.end()){
-                    path_costs_inverse_sum[ant_path_edges[j]] = Q/ant_path_perimeter;
+                if(edge_pheromone_update.find(ant_path_edges[j]) == edge_pheromone_update.end()){
+                    edge_pheromone_update[ant_path_edges[j]] = Q/ant_path_perimeter;
                 }
                 else{
-                    path_costs_inverse_sum[ant_path_edges[j]] += Q/ant_path_perimeter;
+                    edge_pheromone_update[ant_path_edges[j]] += Q/ant_path_perimeter;
                 }
                 //other edge direction
                 pair<pair<int,int>,pair<int,int>> reversed_edge = make_pair(ant_path_edges[j].second,ant_path_edges[j].first);
-                if(path_costs_inverse_sum.find(reversed_edge) == path_costs_inverse_sum.end()){
-                    path_costs_inverse_sum[reversed_edge] = Q/ant_path_perimeter;
+                if(edge_pheromone_update.find(reversed_edge) == edge_pheromone_update.end()){
+                    edge_pheromone_update[reversed_edge] = Q/ant_path_perimeter;
                 }
                 else{
-                    path_costs_inverse_sum[reversed_edge] += Q/ant_path_perimeter;
+                    edge_pheromone_update[reversed_edge] += Q/ant_path_perimeter;
                 }
             }
         }
 
         //adding evaporation rate
-        for(auto edge : path_costs_inverse_sum){
+        for(auto edge : edge_pheromone_update){
             edge.second += p * edge_pheromone[edge.first];
             
             //actually updating edge pheromome
