@@ -606,15 +606,16 @@ void permutation(vector<pair<int,int>> vector_points){
     return;
 }
 
-void nearest_neighbour(int n, set<pair<int,int>> set_points){
-    //initial node will always be the one with smallest x-value point, if draw, its ordered by y-value
+void nearest_neighbour(int n, vector<pair<int,int>> vector_points, set<pair<int,int>> set_points){
+    
     int visited[n];
     memset(visited, 0, sizeof(visited));
     vector<pair<int,int>> nnf_ans;
     set<pair<int,int>> help = set_points;
 
-    nnf_ans.push_back(* help.begin());
-    help.erase(help.begin());
+    int rand_num = (rand() % ((vector_points.size()-1) + 1));
+    nnf_ans.push_back(* help.find(vector_points[rand_num]));
+    help.erase(help.find(vector_points[rand_num]));
     while((int) nnf_ans.size() != n){
         pair<int,int> cur = nnf_ans[nnf_ans.size()-1];
         pair<int,int> closest_to_cur;
@@ -866,7 +867,7 @@ int main(){
     permutation(vector_points);
 
     //2b - nearest neighbour first heuristic @@@@@@@@@@@@@
-    nearest_neighbour(n, set_points);
+    nearest_neighbour(n, vector_points, set_points);
 
     //3 - "2-exchange" @@@@@@@@@@@@@
     //generating edges
