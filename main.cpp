@@ -766,9 +766,8 @@ void ant_colony(vector<pair<int,int>> points, set<pair<int,int>> set_points){
                     }
                 }
             }
-            /* //just in case
-            help_set_points.clear(); */
         }
+
         //update pheromone on each edge
         map<pair<pair<int,int>,pair<int,int>>, double> path_costs_inverse_sum;
         for(int i=0; i<ants; i++){
@@ -806,6 +805,7 @@ void ant_colony(vector<pair<int,int>> points, set<pair<int,int>> set_points){
                 }
             }
         }
+        
         //adding evaporation rate
         for(auto edge : path_costs_inverse_sum){
             edge.second += p * edge_pheromone[edge.first];
