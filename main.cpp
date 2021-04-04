@@ -613,9 +613,11 @@ void nearest_neighbour(int n, vector<pair<int,int>> vector_points, set<pair<int,
     vector<pair<int,int>> nnf_ans;
     set<pair<int,int>> help = set_points;
 
+    //random starting point
     int rand_num = (rand() % ((vector_points.size()-1) + 1));
     nnf_ans.push_back(* help.find(vector_points[rand_num]));
     help.erase(help.find(vector_points[rand_num]));
+
     while((int) nnf_ans.size() != n){
         pair<int,int> cur = nnf_ans[nnf_ans.size()-1];
         pair<int,int> closest_to_cur;
