@@ -163,8 +163,7 @@ int intersections(vector<pair<pair<int,int>,pair<int,int>>> vector_edges){
     int ans = 0;
     for(int i=0; i<n; i++){
         for(int j=0; j<n; j++){
-            if(i != j && edges_intersect(vector_edges[i].first, vector_edges[i].second, vector_edges[j].first, vector_edges[j].second) 
-                    && !collinear_opposite_direction_edges(vector_edges[i], vector_edges[j])
+            if(i != j && edges_intersect(vector_edges[i].first, vector_edges[i].second, vector_edges[j].first, vector_edges[j].second)
                     && vi.find(make_pair(vector_edges[i], vector_edges[j])) == vi.end() 
                     && vi.find(make_pair(vector_edges[j], vector_edges[i])) == vi.end()){
                         ans++;
@@ -642,19 +641,23 @@ void nearest_neighbour(int n, vector<pair<int,int>> vector_points, set<pair<int,
 void ant_colony(vector<pair<int,int>> points, set<pair<int,int>> set_points){
     int n = (int) points.size();
 
+    //all possible edges
     vector<pair<pair<int,int>,pair<int,int>>> edges;
+    //visited edges (generating edges purposes)
     set<pair<pair<int,int>,pair<int,int>>> visited_edges;
 
     //edge pheromone
     map<pair<pair<int,int>,pair<int,int>>,double> edge_pheromone;
 
     //best measures found
-    int best_perimeter =INT_MAX;
+    int best_perimeter = INT_MAX;
     vector<pair<int,int>> best_ant_path;
 
     //arbitrary constants
+    //number of ants
+    int ants = 250;
     //maximum number of iterations
-    int max_iters = 100;
+    int max_iters = 200;
     //how much found paths influences probability
     int Q = 1;
     //how much edge pheromone influences probability
@@ -663,6 +666,9 @@ void ant_colony(vector<pair<int,int>> points, set<pair<int,int>> set_points){
     int beta = 1;
     //pheromone evaporation rate
     double p = 0.85;
+
+    //k-th ant path by iteration
+    vector<pair<int,int>> ant_path[ants];
 
     /*
     NOTES:
@@ -691,12 +697,10 @@ void ant_colony(vector<pair<int,int>> points, set<pair<int,int>> set_points){
     }
     visited_edges.clear();
 
-    int ants = 100;
-    vector<pair<int,int>> ant_path[ants];
-
     while(max_iters > 0){
         //randomly choosing initial point
         pair<int,int> initial = points[(rand() % ((n-1) + 1))];
+        cout << initial.first << " " << initial.second << endl;
 
         //generating each ant path
         for(int i=0; i<ants; i++){
@@ -781,6 +785,8 @@ void ant_colony(vector<pair<int,int>> points, set<pair<int,int>> set_points){
                 
                 //this is totally optional altough it decreases max time spent but possibly giving up optimal solution 
                 if(intersections(ant_path_edges) == 0){
+                    cout << "HELLO"<<endl;
+                    show_vector_edges(ant_path_edges);
                     max_iters = 0;
                     break;
                 }
