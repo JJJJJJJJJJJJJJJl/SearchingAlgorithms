@@ -494,11 +494,13 @@ void simulated_annealing(vector<pair<pair<int,int>,pair<int,int>>> initial){
     vector<pair<pair<int,int>,pair<int,int>>> last;
     vector<pair<pair<int,int>,pair<int,int>>> best_sa;
     int best_sa_perimeter;
+    int best_sa_intersections;
 
     last = initial;
 
     //best measure found
     best_sa_perimeter = perimeter(initial);
+    best_sa_intersections = intersections(initial);
 
     /* NOTES:
 
@@ -517,11 +519,11 @@ void simulated_annealing(vector<pair<pair<int,int>,pair<int,int>>> initial){
     
     //arbitrary constants
     //temperature
-    double T = 1000;
+    double T = 10000;
     //temperature cooling rate
     double cooling_rate = 0.95;
     //maximum number of iterations
-    int max_steps = 150;
+    int max_steps = 5000;
     //current iteration step
     int cur_step = 0;
 
@@ -560,7 +562,7 @@ void simulated_annealing(vector<pair<pair<int,int>,pair<int,int>>> initial){
                     break;
                 }
                 
-                //candidate denied
+                /* //candidate denied
                 else{
                     //removing denied candidate
                     //if you deny a candidate, should it be removed from possible candidates???
@@ -572,13 +574,14 @@ void simulated_annealing(vector<pair<pair<int,int>,pair<int,int>>> initial){
                         break;
                     }
                     cur.clear();
-                }
+                } */
             }
 
             //since we selecting from any candidate it has been found in any state neighbourhood
             int cur_perimeter = perimeter(cur);
-            if(cur_perimeter < best_sa_perimeter){
+            if(cur_perimeter < best_sa_perimeter && intersections(cur) <= best_sa_intersections){
                 best_sa_perimeter = cur_perimeter;
+                best_sa_intersections = intersections(cur);
                 best_sa = cur;
             }
 
@@ -655,9 +658,9 @@ void ant_colony(vector<pair<int,int>> points, set<pair<int,int>> set_points){
 
     //arbitrary constants
     //number of ants
-    int ants = 250;
+    int ants = 500;
     //maximum number of iterations
-    int max_iters = 200;
+    int max_iters = 100;
     //how much found paths influences probability
     int Q = 1;
     //how much edge pheromone influences probability
@@ -700,7 +703,6 @@ void ant_colony(vector<pair<int,int>> points, set<pair<int,int>> set_points){
     while(max_iters > 0){
         //randomly choosing initial point
         pair<int,int> initial = points[(rand() % ((n-1) + 1))];
-        cout << initial.first << " " << initial.second << endl;
 
         //generating each ant path
         for(int i=0; i<ants; i++){
@@ -785,8 +787,6 @@ void ant_colony(vector<pair<int,int>> points, set<pair<int,int>> set_points){
                 
                 //this is totally optional altough it decreases max time spent but possibly giving up optimal solution 
                 if(intersections(ant_path_edges) == 0){
-                    cout << "HELLO"<<endl;
-                    show_vector_edges(ant_path_edges);
                     max_iters = 0;
                     break;
                 }
@@ -920,6 +920,4 @@ int main(){
 
     //6 - Ant Colony Optimization Metaheuristic
     ant_colony(vector_points, set_points);
-
-    return 0;
 }
